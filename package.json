@@ -1,5 +1,5 @@
 {
-  "name": "eg-sdk-js",
+  "name": "@exchange-gate.io/eg-sdk-js",
   "version": "1.0.0",
   "description": "Exchange-Gate.IO javascript browser/nodeJS SDK",
   "repository": {

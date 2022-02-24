@@ -4,12 +4,12 @@ This ExchangeGate SDK library supports web browsers and NodeJS.
 
 ## Installation
 
-#### Yarn (or NPM)
+#### NPM (or Yarn)
 
 You can use any NPM-compatible package manager, including NPM itself and Yarn.
 
 ```bash
-yarn add eg-sdk-js
+npm i @exchange-gate.io/eg-sdk-js
 ```
 
 Then:
