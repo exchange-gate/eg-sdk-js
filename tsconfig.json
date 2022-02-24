@@ -1,0 +1,46 @@
+{
+  "compilerOptions": {
+    "target": "es6",
+    "module": "esnext",
+    "moduleResolution": "node",
+    "strict": true,
+    "alwaysStrict": true,
+    "noImplicitAny": true,
+    "noImplicitReturns": true,
+    "noImplicitThis": true,
+    "esModuleInterop": true,
+    "removeComments": true,
+    "preserveConstEnums": true,
+    "baseUrl": ".",
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "resolveJsonModule": true,
+    "lib": [
+      "ES2020.Promise",
+      "DOM"
+    ],
+    "paths": {
+      "@Core/*": [
+        "src/Core/*"
+      ],
+      "@Core": [
+        "src/Core"
+      ],
+      "@Types/*": [
+        "src/Types/*"
+      ],
+      "@Types": [
+        "src/Types"
+      ]
+    }
+  },
+  "include": [
+    "./**/*",
+    ".eslintrc.js"
+  ],
+  "exclude": [
+    "node_modules",
+    "test"
+  ]
+}
+
