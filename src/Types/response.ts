@@ -114,3 +114,40 @@ export interface CanceledOrder {
         quoteAmountFilled: string;
     };
 }
+export interface PriceTicker {
+    market: string;
+    price: string;
+    time: number;
+    side: OrderSide;
+}
+export interface OrderBookTicker {
+    market: string;
+    book: {
+        bid: OrderBookSideData;
+        ask: OrderBookSideData;
+    };
+    time: number;
+}
+export enum TickerType {
+    PRICE = 'price',
+    BOOK = 'book'
+}
+export interface TickerMap<T> {
+    [market: string]: T;
+}
+export interface Ticker<T> {
+    exchanger: string;
+    ticker: TickerMap<T>;
+    hash: string;
+}
+export interface ExchangerMarket {
+    market: string;
+    isActive: boolean;
+    isTradable: boolean;
+    orderLimits: any; // TODO
+}
+export interface ExchangerMarketMap {
+    [exchanger: string]: {
+        [market: string]: ExchangerMarket;
+    };
+}

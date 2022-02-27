@@ -15,13 +15,13 @@ npm i @exchange-gate.io/eg-sdk-js
 Then:
 
 ```javascript
-import { ExchangeGate } from 'eg-sdk-js';
+import { ExchangeGate } from '@exchange-gate.io/eg-sdk-js';
 ```
 
 Or, if you're not using ES6 modules:
 
 ```javascript
-const ExchangeGate = require('eg-sdk-js');
+const ExchangeGate = require('@exchange-gate.io/eg-sdk-js');
 ```
 
 ## REST API
@@ -49,10 +49,16 @@ Fetch available Exchanger Markets
 const exchangerMarkets = await egRest.fetchExchangerMarkets();
 ```
 
-#### Rates
-Fetch market rates (latest trade price)
+#### Price ticker
+Fetch price ticker for selected markets based from last trade price
 ```js
-const rates = await egRest.fetchRates('binance', ['btc-usdt', 'btc-eth']);
+const priceTicker = await egRest.fetchPriceTicker('binance', ['btc-usdt', 'btc-eth']);
+```
+
+#### OrderBook ticker
+Fetch order book ticker for selected markets based from best bid/ask
+```js
+const orderBookTicker = await egRest.fetchOrderBookTicker('binance', ['btc-usdt', 'btc-eth']);
 ```
 
 #### Wallet balance
@@ -178,11 +184,23 @@ const streamSubscription = egRealtime.stream.orderBook('binance', 'btc-usdt', em
 })();
 ```
 
-#### Rates
-Subscribe market rates stream.  
-Market rates for selected markets based from latest trade price, published 1x per 5sec
+#### Price ticker
+Subscribe market price ticker stream.  
+Price ticker for selected markets based from last trade price, published once per second
 ```js
-const streamSubscription = egRealtime.stream.rates('binance', ['btc-usdt', 'btc-eth']);
+const streamSubscription = egRealtime.stream.priceTicker('binance', ['btc-usdt', 'btc-eth']);
+(async () => {
+    for await (const event of streamSubscription.consumer()) {
+        console.log('event', event.name, event.data);
+    }
+})();
+```
+
+#### OrderBook ticker
+Subscribe market order book ticker stream.  
+Order book ticker for selected markets based from best bid/ask, published once per second
+```js
+const streamSubscription = egRealtime.stream.orderBookTicker('binance', ['btc-usdt', 'btc-eth']);
 (async () => {
     for await (const event of streamSubscription.consumer()) {
         console.log('event', event.name, event.data);

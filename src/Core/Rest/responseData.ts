@@ -1,11 +1,11 @@
 import {
     CanceledOrder,
-    CreatedOrder,
+    CreatedOrder, ExchangerMarketMap,
     MyTrades,
     OpenOrders,
     OrderBookData,
-    OrderBookSnapshot,
-    PublicTradesSnapshot,
+    OrderBookSnapshot, OrderBookTicker, PriceTicker,
+    PublicTradesSnapshot, Ticker, TickerMap,
     WalletBalance
 } from '@Types/response';
 import {OrderSide} from '@Types/order';
@@ -113,5 +113,22 @@ export class ResponseData {
                 }
             }
         };
+    }
+    public static FromPriceTicker(exchanger: string, hash: string, ticker: TickerMap<PriceTicker>): Ticker<PriceTicker|null> {
+        return {
+            exchanger,
+            ticker,
+            hash
+        };
+    }
+    public static FromOrderBookTicker(exchanger: string, hash: string, ticker: TickerMap<OrderBookTicker>): Ticker<OrderBookTicker|null> {
+        return {
+            exchanger,
+            ticker,
+            hash
+        };
+    }
+    public static FromExchangerMarkets(exchangerMarkets: ExchangerMarketMap): ExchangerMarketMap {
+        return exchangerMarkets;
     }
 }

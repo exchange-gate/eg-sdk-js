@@ -1,6 +1,15 @@
 import {OrderSide} from '@Types/order';
-import {Event, MyTrade, OpenOrder, OrderBook, PublicTrade, SubscriptionDetails, EventType} from '@Types/event';
-import {OrderBookData as IOrderBook} from '@Types/response';
+import {
+    Event,
+    MyTrade,
+    OpenOrder,
+    OrderBook,
+    PublicTrade,
+    SubscriptionDetails,
+    EventType,
+    PriceTicker, OrderBookTicker
+} from '@Types/event';
+import {ExchangerMarketMap, OrderBookData as IOrderBook, Ticker} from '@Types/response';
 
 
 export class EventData {
@@ -67,6 +76,18 @@ export class EventData {
                 activeConnections: subscription.activeConnections,
                 allowedConnections: subscription.allowedConnections
             }
+        };
+    }
+    public static FromPriceTickerEvent(ticker: PriceTicker): Event<PriceTicker> {
+        return {
+            name: 'priceTicker',
+            data: ticker
+        };
+    }
+    public static FromOrderBookTickerEvent(ticker: OrderBookTicker): Event<OrderBookTicker> {
+        return {
+            name: 'orderBookTicker',
+            data: ticker
         };
     }
 }

@@ -2,7 +2,7 @@ import AsyncStreamEmitter from 'async-stream-emitter';
 import {Rpc} from '@Types/rpc';
 import * as IRealtime from '@Types/realtime';
 import ConsumableStream from 'consumable-stream';
-import {StreamSubscription, Stream as IStream} from '@Types/stream';
+import {Stream as IStream, StreamSubscription} from '@Types/stream';
 import {
     Event,
     EventType,
@@ -10,10 +10,13 @@ import {
     OpenOrder,
     OrderBook,
     OrderBookSideData,
+    OrderBookTicker,
+    PriceTicker,
     PublicTrade,
     SubscriptionDetails
 } from '@Types/event';
 import {EventData} from '@Core/Realtime/eventData';
+import {TickerType} from '@Types/response';
 import Socket = IRealtime.Socket;
 
 
@@ -51,7 +54,7 @@ export class Stream implements IStream {
     }
 
     public publicTrades(exchanger: string, market: string): StreamSubscription<Event<PublicTrade>> {
-        const channelName = `trades:${exchanger}:${market}`.toLowerCase();
+        const channelName = `stream:trades:${exchanger}:${market}`.toLowerCase();
         const consumableStreamName = `${Stream.NamePrefix}:${channelName}`;
 
         if (this.subscriptions.has(consumableStreamName)) {
@@ -109,7 +112,7 @@ export class Stream implements IStream {
     }
 
     public orderBook(exchanger: string, market: string, emitTimeout: number = 500): StreamSubscription<Event<OrderBook>> {
-        const channelName = `book:${exchanger}:${market}`.toLowerCase();
+        const channelName = `stream:book:${exchanger}:${market}`.toLowerCase();
         const consumableStreamName = `${Stream.NamePrefix}:${channelName}`;
 
         if (this.subscriptions.has(consumableStreamName)) {
@@ -413,6 +416,41 @@ export class Stream implements IStream {
         return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<OpenOrder>>;
     }
 
+    public async ticker(exchanger: string, markets: string[], type: TickerType): Promise<StreamSubscription<Event<PriceTicker|OrderBookTicker>>> {
+        const tickerResp = await this.rpc.fetchTicker(exchanger, markets, type);
+        if (!tickerResp.data) {
+            throw new Error(`RPC failed: ticker ${type}/${exchanger}/${markets.join('_')}`);
+        }
+
+        const channelName = `ticker:${type}:${exchanger}:${tickerResp.data.hash}`;
+        const consumableStreamName = `${Stream.NamePrefix}:${channelName}`;
+
+        if (this.subscriptions.has(consumableStreamName)) {
+            return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<PriceTicker|OrderBookTicker>>;
+        }
+
+        (async () => {
+            const tickerChannel = this.socket.subscribe(channelName, {data: {markets}});
+            for await (const tickerEvent of tickerChannel) {
+                const data = EventData[type === TickerType.PRICE ? 'FromPriceTickerEvent' : 'FromOrderBookTickerEvent'](tickerEvent);
+                this.emitter.emit(consumableStreamName, data);
+            }
+        })();
+
+        const listener = this.emitter.listener(consumableStreamName);
+        this.subscriptions.set(consumableStreamName, this.makeStreamSubscription(channelName, listener));
+
+        return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<PriceTicker|OrderBookTicker>>;
+    }
+
+    public priceTicker(exchanger: string, markets: string[]): Promise<StreamSubscription<Event<PriceTicker>>> {
+        return this.ticker(exchanger, markets, TickerType.PRICE) as Promise<StreamSubscription<Event<PriceTicker>>>;
+    }
+
+    public orderBookTicker(exchanger: string, markets: string[]): Promise<StreamSubscription<Event<OrderBookTicker>>> {
+        return this.ticker(exchanger, markets, TickerType.BOOK) as Promise<StreamSubscription<Event<OrderBookTicker>>>;
+    }
+
     public subscriptionDetails(): StreamSubscription<Event<SubscriptionDetails>> {
         const channelName = 'subscription-details';
         const consumableStreamName = `${Stream.NamePrefix}:${channelName}`;
@@ -422,7 +460,7 @@ export class Stream implements IStream {
         }
 
         (async () => {
-            const subscriptionDetailsChannel = this.socket.subscribe('subscription-details');
+            const subscriptionDetailsChannel = this.socket.subscribe(channelName);
             for await (const subscriptionDetailsEvent of subscriptionDetailsChannel) {
                 this.emitter.emit(consumableStreamName, EventData.FromSubscriptionDetailsEvent(subscriptionDetailsEvent));
             }

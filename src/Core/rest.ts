@@ -1,15 +1,22 @@
 import axios, {AxiosInstance, Method} from 'axios';
-import {Transport, TransportOpts, Rest as IRest, RequestParams} from '@Types/rest';
+import {RequestParams, Rest as IRest, Transport, TransportOpts} from '@Types/rest';
 import {defaultOpts} from '@Core/Rest/defaultOpts';
 import pkg from 'package.json';
 import {
-    Response,
     CanceledOrder,
     CreatedOrder,
+    ExchangerMarketMap,
     MyTrades,
     OpenOrders,
     OrderBookSnapshot,
-    PublicTradesSnapshot, WalletBalance, ResponseState
+    OrderBookTicker,
+    PriceTicker,
+    PublicTradesSnapshot,
+    Response,
+    ResponseState,
+    Ticker,
+    TickerType,
+    WalletBalance
 } from '@Types/response';
 import {ResponseData} from '@Core/Rest/responseData';
 
@@ -66,11 +73,11 @@ export default class Rest implements IRest {
         };
     }
 
-    public async createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>> {
+    public createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>> {
         return this.createOrder(exchanger, market, side, amount, limitPrice);
     }
 
-    public async createMarketOrder(exchanger: string, market: string, side: string, amount: string): Promise<Response<CreatedOrder>> {
+    public createMarketOrder(exchanger: string, market: string, side: string, amount: string): Promise<Response<CreatedOrder>> {
         return this.createOrder(exchanger, market, side, amount);
     }
 
@@ -174,6 +181,52 @@ export default class Rest implements IRest {
         return {
             state: ResponseState.SUCCESS,
             data: ResponseData.FromWalletBalance(exchanger, market, restResponse.data)
+        };
+    }
+
+    public async fetchTicker(exchanger: string, markets: string[], type: TickerType): Promise<Response<Ticker<PriceTicker|OrderBookTicker|null>>> {
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            `/api/market-data/ticker/${type}/${exchanger}`,
+            { markets }
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        const data = ResponseData[type === TickerType.PRICE ? 'FromPriceTicker' : 'FromOrderBookTicker'](
+            exchanger,
+            restResponse.data.hash,
+            restResponse.data.ticker
+        );
+        return {
+            state: ResponseState.SUCCESS,
+            data
+        };
+    }
+
+    public fetchOrderBookTicker(exchanger: string, markets: string[]): Promise<Response<Ticker<OrderBookTicker|null>>> {
+        return this.fetchTicker(exchanger, markets, TickerType.BOOK) as Promise<Response<Ticker<OrderBookTicker|null>>>;
+    }
+
+    public fetchPriceTicker(exchanger: string, markets: string[]): Promise<Response<Ticker<PriceTicker|null>>> {
+        return this.fetchTicker(exchanger, markets, TickerType.PRICE) as Promise<Response<Ticker<PriceTicker|null>>>;
+    }
+
+    public async fetchExchangerMarkets(): Promise<Response<ExchangerMarketMap>> {
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            '/api/exchanger/markets'
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: ResponseData.FromExchangerMarkets(restResponse.data.exchangers)
         };
     }
 }

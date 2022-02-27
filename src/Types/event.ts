@@ -2,7 +2,10 @@ import {
     PublicTrade as IPublicTrade,
     MyTrade as IMyTrade,
     OrderBookData as IOrderBook,
-    OrderBookSideData as IOrderBookSideData
+    OrderBookSideData as IOrderBookSideData,
+    PriceTicker as IPriceTicker,
+    OrderBookTicker as IOrderBookTicker,
+    Ticker
 } from '@Types/response';
 import {OrderSide, OrderState} from '@Types/order';
 
@@ -43,3 +46,5 @@ export interface SubscriptionDetails {
     activeConnections: number;
     allowedConnections: number;
 }
+export type PriceTicker = Ticker<IPriceTicker|null>;
+export type OrderBookTicker = Ticker<IOrderBookTicker|null>;
