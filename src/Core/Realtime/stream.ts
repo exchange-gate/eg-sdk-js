@@ -37,6 +37,7 @@ export class Stream implements IStream {
 
     public close(channelName?: string): boolean {
         if (!channelName) {
+            this.socket.closeAllChannels();
             this.emitter.closeAllListeners();
             this.subscriptions.clear();
             return true;
@@ -48,6 +49,7 @@ export class Stream implements IStream {
         }
 
         this.socket.unsubscribe(channelName);
+        this.socket.closeChannel(channelName);
         this.emitter.closeListener(consumableStreamName);
         this.subscriptions.delete(consumableStreamName);
         return true;
