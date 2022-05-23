@@ -5,7 +5,7 @@ import pkg from 'package.json';
 import {
     CanceledOrder,
     CreatedOrder,
-    ExchangerMarketMap,
+    ExchangerMarketMap, HistoricalOHLCV, HistoricalTrades,
     MyTrades,
     OpenOrders,
     OrderBookSnapshot,
@@ -227,6 +227,40 @@ export default class Rest implements IRest {
         return {
             state: ResponseState.SUCCESS,
             data: ResponseData.FromExchangerMarkets(restResponse.data.exchangers)
+        };
+    }
+
+    public async fetchOhlcv(exchanger: string, market: string, group: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalOHLCV>> {
+        const [marketFrom, marketTo] = market.toLowerCase().split('-');
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            `/api/market-data/ohlcv/${exchanger}/${marketFrom}/${marketTo}/${group}/${periodFrom}/${periodTo}`
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: ResponseData.FromOhlcv(restResponse.data)
+        };
+    }
+
+    public async fetchHistoricalTrades(exchanger: string, market: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalTrades>> {
+        const [marketFrom, marketTo] = market.toLowerCase().split('-');
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            `/api/market-data/trades/${exchanger}/${marketFrom}/${marketTo}/${periodFrom}/${periodTo}`
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: ResponseData.FromHistoricalTrades(restResponse.data)
         };
     }
 }

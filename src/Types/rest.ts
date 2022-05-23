@@ -2,7 +2,7 @@ import {AxiosRequestConfig, AxiosRequestHeaders, Method} from 'axios';
 import RestClass from '@Core/rest';
 import {
     CanceledOrder,
-    CreatedOrder, ExchangerMarketMap,
+    CreatedOrder, ExchangerMarketMap, HistoricalOHLCV, HistoricalTrades,
     MyTrades,
     OpenOrders,
     OrderBookSnapshot, OrderBookTicker, PriceTicker,
@@ -29,6 +29,8 @@ export interface Rest {
 
     fetchOrderBookSnapshot(exchanger: string, market: string): Promise<Response<OrderBookSnapshot>>;
     fetchPublicTradesSnapshot(exchanger: string, market: string): Promise<Response<PublicTradesSnapshot>>;
+    fetchOhlcv(exchanger: string, market: string, group: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalOHLCV>>;
+    fetchHistoricalTrades(exchanger: string, market: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalTrades>>;
     fetchMyTrades(exchanger: string, market: string): Promise<Response<MyTrades>>;
     fetchOpenOrders(exchanger: string, market: string): Promise<Response<OpenOrders>>;
     fetchWalletBalance(exchanger: string, market: string): Promise<Response<WalletBalance>>;

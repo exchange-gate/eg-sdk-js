@@ -151,3 +151,33 @@ export interface ExchangerMarketMap {
         [market: string]: ExchangerMarket;
     };
 }
+export interface OHLCV {
+    periodFrom: string;
+    periodTo: string;
+    timeOpen: string;
+    timeClose: string;
+    open: string;
+    high: string;
+    low: string;
+    close: string;
+    volume: string;
+    trades: number;
+}
+export interface HistoricalOHLCV {
+    exchanger: string;
+    market: string;
+    ohlcv: OHLCV[];
+}
+
+export interface HistoricalTrade {
+    id: number;
+    time: string;
+    price: string;
+    amount: string;
+    side: number;
+}
+export interface HistoricalTrades {
+    exchanger: string;
+    market: string;
+    trades: HistoricalTrade[];
+}

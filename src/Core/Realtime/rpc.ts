@@ -2,7 +2,7 @@ import {Method} from 'axios';
 import {
     CanceledOrder,
     CreatedOrder,
-    ExchangerMarketMap,
+    ExchangerMarketMap, HistoricalOHLCV, HistoricalTrades,
     MyTrades,
     OpenOrders,
     OrderBookSnapshot,
@@ -177,6 +177,42 @@ export class Rpc implements IRpc {
         return {
             state: ResponseState.SUCCESS,
             data: ResponseData.FromExchangerMarkets(rpcResponse.data.exchangers)
+        };
+    }
+
+    public async fetchOhlcv(exchanger: string, market: string, group: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalOHLCV>> {
+        const [from, to] = market.toLowerCase().split('-');
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            'market-data/ohlcv/:exchanger/:from/:to/:group/:periodFrom/:periodTo',
+            {exchanger, from, to, group, periodFrom, periodTo}
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: ResponseData.FromOhlcv(restResponse.data)
+        };
+    }
+
+    public async fetchHistoricalTrades(exchanger: string, market: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalTrades>> {
+        const [from, to] = market.toLowerCase().split('-');
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            'market-data/trades/:exchanger/:from/:to/:periodFrom/:periodTo',
+            {exchanger, from, to, periodFrom, periodTo}
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: ResponseData.FromHistoricalTrades(restResponse.data)
         };
     }
 

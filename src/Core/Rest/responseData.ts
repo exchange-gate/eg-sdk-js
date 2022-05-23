@@ -1,6 +1,6 @@
 import {
     CanceledOrder,
-    CreatedOrder, ExchangerMarketMap,
+    CreatedOrder, ExchangerMarketMap, HistoricalOHLCV, HistoricalTrades,
     MyTrades,
     OpenOrders,
     OrderBookData,
@@ -130,5 +130,11 @@ export class ResponseData {
     }
     public static FromExchangerMarkets(exchangerMarkets: ExchangerMarketMap): ExchangerMarketMap {
         return exchangerMarkets;
+    }
+    public static FromOhlcv(historicalOhlcv: HistoricalOHLCV): HistoricalOHLCV {
+        return historicalOhlcv;
+    }
+    public static FromHistoricalTrades(historicalTrades: HistoricalTrades): HistoricalTrades {
+        return historicalTrades;
     }
 }
