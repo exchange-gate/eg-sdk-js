@@ -15,26 +15,27 @@
   "main": "dist/eg-sdk.cjs.js",
   "module": "dist/eg-sdk.esm.js",
   "browser": "dist/eg-sdk.umd.js",
-  "types": "dist/index.d.ts",
+  "types": "types/src/index.d.ts",
   "files": [
     "dist",
-    "build"
+    "types"
   ],
   "scripts": {
     "dev": "rollup -c -w",
     "build": "rollup -c",
-    "build:types": "tsc -p ./tsconfig.json --outDir build --declaration true && api-extractor run",
+    "build:types": "tsc -p ./tsconfig.json --outDir types --declaration --emitDeclarationOnly true && tsc-alias --dir types",
     "docs": "typedoc src --out docs",
-    "clean": "rimraf ./build ./dist ./docs",
+    "clean": "rimraf ./types ./dist ./docs",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "dependencies": {
     "@types/consumable-stream": "^2.0.0",
-    "@types/writable-consumable-stream": "^2.0.0",
     "@types/socketcluster-client": "^16.0.0",
+    "@types/writable-consumable-stream": "^2.0.0",
     "async-stream-emitter": "^4.0.0",
     "axios": "^0.26.0",
-    "socketcluster-client": "^16.0.4"
+    "socketcluster-client": "^16.0.4",
+    "tsc-alias": "^1.7.0"
   },
   "devDependencies": {
     "@microsoft/api-extractor": "^7.19.4",

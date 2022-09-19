@@ -9,7 +9,7 @@ import {
     EventType,
     PriceTicker, OrderBookTicker
 } from '@Types/event';
-import {ExchangerMarketMap, OrderBookData as IOrderBook, Ticker} from '@Types/response';
+import {OrderBookData as IOrderBook} from '@Types/response';
 
 
 export class EventData {
@@ -18,7 +18,7 @@ export class EventData {
             name: 'publicTrades',
             data: {
                 id: trade.id,
-                time: trade.time,
+                time: trade.time || trade.ts,
                 timeConsumed: trade.timeReceived,
                 timeReceived: Date.now(),
                 price: trade.price,
