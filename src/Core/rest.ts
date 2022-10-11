@@ -5,7 +5,7 @@ import pkg from 'package.json';
 import {
     CanceledOrder,
     CreatedOrder,
-    ExchangerMarketMap, HistoricalOHLCV, HistoricalTrades,
+    ExchangerMarketMap, GeneralKey, HistoricalOHLCV, HistoricalTrades,
     MyTrades,
     OpenOrders,
     OrderBookSnapshot,
@@ -262,5 +262,18 @@ export default class Rest implements IRest {
             state: ResponseState.SUCCESS,
             data: ResponseData.FromHistoricalTrades(restResponse.data)
         };
+    }
+
+    public async createGeneralApiKey(name: string): Promise<Response<GeneralKey>> {
+        const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/key/general', { name });
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return Promise.resolve({
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        });
     }
 }

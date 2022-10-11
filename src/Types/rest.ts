@@ -2,7 +2,7 @@ import {AxiosRequestConfig, AxiosRequestHeaders, Method} from 'axios';
 import RestClass from '@Core/rest';
 import {
     CanceledOrder,
-    CreatedOrder, ExchangerMarketMap, HistoricalOHLCV, HistoricalTrades,
+    CreatedOrder, ExchangerMarketMap, GeneralKey, HistoricalOHLCV, HistoricalTrades,
     MyTrades,
     OpenOrders,
     OrderBookSnapshot, OrderBookTicker, PriceTicker,
@@ -42,4 +42,6 @@ export interface Rest {
     createMarketOrder(exchanger: string, market: string, side: string, amount: string): Promise<Response<CreatedOrder>>;
     createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>>;
     cancelOrder(exchanger: string, market: string, uuid: string): Promise<Response<CanceledOrder>>;
+
+    createGeneralApiKey(name: string): Promise<Response<GeneralKey>>;
 }

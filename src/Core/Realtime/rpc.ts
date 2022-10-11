@@ -2,7 +2,7 @@ import {Method} from 'axios';
 import {
     CanceledOrder,
     CreatedOrder,
-    ExchangerMarketMap, HistoricalOHLCV, HistoricalTrades,
+    ExchangerMarketMap, GeneralKey, HistoricalOHLCV, HistoricalTrades,
     MyTrades,
     OpenOrders,
     OrderBookSnapshot,
@@ -254,6 +254,21 @@ export class Rpc implements IRpc {
         return {
             state: ResponseState.SUCCESS,
             data: ResponseData.FromCanceledOrder(exchanger, market, rpcResponse.data)
+        };
+    }
+
+    public async createGeneralApiKey(name: string): Promise<Response<GeneralKey>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'POST', 'key/general', { name }
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
         };
     }
 }

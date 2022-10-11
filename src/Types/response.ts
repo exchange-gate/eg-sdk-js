@@ -181,3 +181,5 @@ export interface HistoricalTrades {
     market: string;
     trades: HistoricalTrade[];
 }
+
+export type GeneralKey = string;
