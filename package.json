@@ -23,7 +23,7 @@
   "scripts": {
     "dev": "rollup -c -w",
     "build": "rollup -c",
-    "build:types": "tsc -p ./tsconfig.json --outDir types --declaration --emitDeclarationOnly true && tsc-alias --dir types",
+    "build:types": "tsc -p ./tsconfig.json --outDir types --module commonjs --declaration true && tsc-alias --dir types && rimraf ./types/src/Core ./types/src/index.js ./types/package.json",
     "docs": "typedoc src --out docs",
     "clean": "rimraf ./types ./dist ./docs",
     "test": "echo \"Error: no test specified\" && exit 1"

@@ -21,7 +21,7 @@ import { ExchangeGate } from '@exchange-gate.io/eg-sdk-js';
 Or, if you're not using ES6 modules:
 
 ```javascript
-const ExchangeGate = require('@exchange-gate.io/eg-sdk-js');
+const ExchangeGate = require('@exchange-gate.io/eg-sdk-js').ExchangeGate;
 ```
 
 ## REST API
