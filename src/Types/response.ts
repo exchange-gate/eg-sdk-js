@@ -72,6 +72,50 @@ export interface OpenOrders {
     market: string;
     orders: OpenOrder[];
 }
+export interface OrderTrade {
+    tradeId: number;
+    price: string;
+    amount: string;
+    commission: string;
+    executionType: string;
+    createdAt: string;
+    commissionCurrency: string;
+}
+export interface Order {
+    uuid: string;
+    orderId: number;
+    generalKeyId: number;
+    exchangerId: number;
+    marketId: number;
+    exchangerMarketId: number;
+    amount: string;
+    amountFilled: string|null;
+    quoteAmountFilled: string|null;
+    limitPrice: string|null;
+    side: string;
+    type: string;
+    state: string;
+    responseFull: string|null;
+    metaData: {[key: string]: string}|null;
+    createdAt: string;
+    updatedAt: string;
+    exchanger: string;
+    market: string;
+    trades: OrderTrade[];
+}
+export interface OrderSearchCriteria {
+    exchangerIds?: ExchangerId[];
+    marketIds?: MarketId[];
+    exchangerMarketIds?: ExchangerMarketId[];
+    state?: OrderState[];
+    side?: OrderSide[];
+    type?: OrderType[];
+    meta?: {[key: string]: string};
+    periodFrom?: string;
+    periodTo?: string;
+    sort?: 'asc'|'desc';
+    limit?: number;
+}
 export interface WalletBalance {
     exchanger: string;
     market: string;
@@ -140,7 +184,20 @@ export interface Ticker<T> {
     ticker: TickerMap<T>;
     hash: string;
 }
+export type ExchangerId = number;
+export interface Exchanger {
+    id: ExchangerId;
+    name: string;
+}
+export type MarketId = number;
+export interface Market {
+    id: MarketId;
+    market: string;
+    isActive: boolean;
+}
+export type ExchangerMarketId = number;
 export interface ExchangerMarket {
+    id: ExchangerMarketId;
     market: string;
     isActive: boolean;
     isTradable: boolean;
@@ -183,3 +240,29 @@ export interface HistoricalTrades {
 }
 
 export type GeneralKey = string;
+export interface Exchanger {
+    id: number;
+    name: string;
+}
+export interface ExchangerKey {
+    id: number;
+    name: string;
+    exchanger?: Exchanger[];
+}
+export interface GeneralKeyExchangers {
+    id: number;
+    name: string;
+    exchangerKeys: ExchangerKey[];
+}
+export type KeySecretValue = string;
+export type KeySecret = string;
+export interface ExchangerKeySecret {
+    [keySecret: KeySecret]: KeySecretValue;
+}
+export interface ExchangerKeyData {
+    data: KeySecret;
+    label: string;
+}
+export interface ExchangerKeyDataMap {
+    [exchanger: string]: ExchangerKeyData[];
+}

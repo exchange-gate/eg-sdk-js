@@ -1,12 +1,12 @@
 import {Method} from 'axios';
 import {
     CanceledOrder,
-    CreatedOrder,
-    ExchangerMarketMap, GeneralKey, HistoricalOHLCV, HistoricalTrades,
+    CreatedOrder, Exchanger, ExchangerKey, ExchangerKeyDataMap, ExchangerKeySecret,
+    ExchangerMarketMap, GeneralKey, GeneralKeyExchangers, HistoricalOHLCV, HistoricalTrades, Market,
     MyTrades,
-    OpenOrders,
+    OpenOrders, Order,
     OrderBookSnapshot,
-    OrderBookTicker,
+    OrderBookTicker, OrderSearchCriteria,
     PriceTicker,
     PublicTradesSnapshot,
     Response,
@@ -180,6 +180,32 @@ export class Rpc implements IRpc {
         };
     }
 
+    public async fetchExchangers(): Promise<Response<Exchanger[]>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('GET', 'exchanger/available');
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchMarkets(): Promise<Response<Market[]>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('GET', 'market/list');
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
     public async fetchOhlcv(exchanger: string, market: string, group: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalOHLCV>> {
         const [from, to] = market.toLowerCase().split('-');
         const restResponse: Response<any> = await this.invokeRestApi(
@@ -234,6 +260,21 @@ export class Rpc implements IRpc {
         };
     }
 
+    public async searchOrders(orderSearchCriteria: OrderSearchCriteria): Promise<Response<Order[]>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'POST', 'order/search', orderSearchCriteria
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
     public createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>> {
         return this.createOrder(exchanger, market, side, amount, limitPrice);
     }
@@ -261,6 +302,86 @@ export class Rpc implements IRpc {
         const rpcResponse: Response<any> = await this.invokeRestApi(
             'POST', 'key/general', { name }
         );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchGeneralApiKey(keyId: number): Promise<Response<GeneralKeyExchangers>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'GET', 'key/general/:keyId', { keyId }
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchExchangerKeyDataMap(): Promise<Response<ExchangerKeyDataMap>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('GET', 'key/exchangers-data-map');
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async createExchangerKey(exchangerId: number, name: string, data: ExchangerKeySecret): Promise<Response<ExchangerKey>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('POST', 'key/exchanger', { exchangerId, name, data });
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async addGeneralExchangerKeyLink(id: number, exchangerKeyIds: number[]): Promise<Response<boolean>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('PUT', 'key/general/:id/exchanger-keys', { id, exchangerKeyIds });
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async removeGeneralExchangerKeyLink(id: number, exchangerKeyIds: number[]): Promise<Response<boolean>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('DELETE', 'key/general/:id/exchanger-keys', { id, exchangerKeyIds });
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async deleteExchangerKey(id: number): Promise<Response<boolean>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('DELETE', 'key/exchanger/:id', { id });
 
         if (rpcResponse.state === ResponseState.ERROR) {
             return rpcResponse;

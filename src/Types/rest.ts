@@ -2,12 +2,22 @@ import {AxiosRequestConfig, AxiosRequestHeaders, Method} from 'axios';
 import RestClass from '@Core/rest';
 import {
     CanceledOrder,
-    CreatedOrder, ExchangerMarketMap, GeneralKey, HistoricalOHLCV, HistoricalTrades,
+    CreatedOrder, Exchanger, ExchangerKey,
+    ExchangerKeyDataMap, ExchangerKeySecret,
+    ExchangerMarketMap,
+    GeneralKey,
+    GeneralKeyExchangers,
+    HistoricalOHLCV,
+    HistoricalTrades, Market,
     MyTrades,
-    OpenOrders,
-    OrderBookSnapshot, OrderBookTicker, PriceTicker,
+    OpenOrders, Order,
+    OrderBookSnapshot,
+    OrderBookTicker, OrderSearchCriteria,
+    PriceTicker,
     PublicTradesSnapshot,
-    Response, Ticker, TickerType,
+    Response,
+    Ticker,
+    TickerType,
     WalletBalance
 } from '@Types/response';
 
@@ -38,10 +48,19 @@ export interface Rest {
     fetchPriceTicker(exchanger: string, markets: string[]): Promise<Response<Ticker<PriceTicker|null>>>;
     fetchOrderBookTicker(exchanger: string, markets: string[]): Promise<Response<Ticker<OrderBookTicker|null>>>;
     fetchExchangerMarkets(): Promise<Response<ExchangerMarketMap>>;
+    fetchMarkets(): Promise<Response<Market[]>>;
+    fetchExchangers(): Promise<Response<Exchanger[]>>;
     createOrder(exchanger: string, market: string, side: string, amount: string, limitPrice?: string|null): Promise<Response<CreatedOrder>>;
     createMarketOrder(exchanger: string, market: string, side: string, amount: string): Promise<Response<CreatedOrder>>;
     createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>>;
     cancelOrder(exchanger: string, market: string, uuid: string): Promise<Response<CanceledOrder>>;
+    searchOrders(orderSearchCriteria: OrderSearchCriteria): Promise<Response<Order[]>>;
 
     createGeneralApiKey(name: string): Promise<Response<GeneralKey>>;
+    fetchGeneralApiKey(keyId: number): Promise<Response<GeneralKeyExchangers>>;
+    fetchExchangerKeyDataMap(): Promise<Response<ExchangerKeyDataMap>>;
+    createExchangerKey(exchangerId: number, name: string, data: ExchangerKeySecret): Promise<Response<ExchangerKey>>;
+    addGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>>;
+    removeGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>>;
+    deleteExchangerKey(exchangerKeyId: number): Promise<Response<boolean>>;
 }

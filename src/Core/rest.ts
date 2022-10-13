@@ -4,12 +4,12 @@ import {defaultOpts} from '@Core/Rest/defaultOpts';
 import pkg from 'package.json';
 import {
     CanceledOrder,
-    CreatedOrder,
-    ExchangerMarketMap, GeneralKey, HistoricalOHLCV, HistoricalTrades,
+    CreatedOrder, Exchanger, ExchangerKey, ExchangerKeyDataMap, ExchangerKeySecret,
+    ExchangerMarketMap, GeneralKey, GeneralKeyExchangers, HistoricalOHLCV, HistoricalTrades, Market,
     MyTrades,
-    OpenOrders,
+    OpenOrders, Order,
     OrderBookSnapshot,
-    OrderBookTicker,
+    OrderBookTicker, OrderSearchCriteria,
     PriceTicker,
     PublicTradesSnapshot,
     Response,
@@ -96,6 +96,21 @@ export default class Rest implements IRest {
         return {
             state: ResponseState.SUCCESS,
             data: ResponseData.FromCreatedOrder(exchanger, market, restResponse.data)
+        };
+    }
+
+    public async searchOrders(orderSearchCriteria: OrderSearchCriteria): Promise<Response<Order[]>> {
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'POST', '/api/order/search', orderSearchCriteria
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
         };
     }
 
@@ -230,6 +245,38 @@ export default class Rest implements IRest {
         };
     }
 
+    public async fetchExchangers(): Promise<Response<Exchanger[]>> {
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            '/api/exchanger/available'
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async fetchMarkets(): Promise<Response<Market[]>> {
+        const restResponse: Response<any> = await this.invokeRestApi(
+            'GET',
+            '/api/market/list'
+        );
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
     public async fetchOhlcv(exchanger: string, market: string, group: string, periodFrom: string, periodTo: string): Promise<Response<HistoricalOHLCV>> {
         const [marketFrom, marketTo] = market.toLowerCase().split('-');
         const restResponse: Response<any> = await this.invokeRestApi(
@@ -266,6 +313,84 @@ export default class Rest implements IRest {
 
     public async createGeneralApiKey(name: string): Promise<Response<GeneralKey>> {
         const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/key/general', { name });
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return Promise.resolve({
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        });
+    }
+
+    public async fetchGeneralApiKey(keyId: number): Promise<Response<GeneralKeyExchangers>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', `/api/key/general/${keyId}`);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return Promise.resolve({
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        });
+    }
+
+    public async fetchExchangerKeyDataMap(): Promise<Response<ExchangerKeyDataMap>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', '/api/key/exchangers-data-map');
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return Promise.resolve({
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        });
+    }
+
+    public async createExchangerKey(exchangerId: number, name: string, data: ExchangerKeySecret): Promise<Response<ExchangerKey>> {
+        const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/key/exchanger', { exchangerId, name, data });
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return Promise.resolve({
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        });
+    }
+
+    public async addGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>> {
+        const restResponse: Response<any> = await this.invokeRestApi('PUT', `/api/key/general/${generalKeyId}/exchanger-keys`, { exchangerKeyIds });
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return Promise.resolve({
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        });
+    }
+
+    public async removeGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>> {
+        const restResponse: Response<any> = await this.invokeRestApi('DELETE', `/api/key/general/${generalKeyId}/exchanger-keys`, { exchangerKeyIds });
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return Promise.resolve({
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        });
+    }
+
+    public async deleteExchangerKey(exchangerKeyId: number): Promise<Response<boolean>> {
+        const restResponse: Response<any> = await this.invokeRestApi('DELETE', `/api/key/exchanger/${exchangerKeyId}`);
 
         if (restResponse.state === ResponseState.ERROR) {
             return restResponse;
