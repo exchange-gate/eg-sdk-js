@@ -23,7 +23,7 @@ export interface OrderBookData {
     asks: OrderBookSideData[];
 }
 export interface OrderBookSnapshot {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     book: OrderBookData;
     sequenceProcessed: number;
@@ -38,7 +38,7 @@ export interface PublicTrade {
     side: OrderSide;
 }
 export interface PublicTradesSnapshot {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     trades: PublicTrade[];
 }
@@ -53,7 +53,7 @@ export interface MyTrade {
     execType: TradeExecType;
 }
 export interface MyTrades {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     trades: MyTrade[];
 }
@@ -68,7 +68,7 @@ export interface OpenOrder {
     quoteAmountFilled: string;
 }
 export interface OpenOrders {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     orders: OpenOrder[];
 }
@@ -80,6 +80,9 @@ export interface OrderTrade {
     executionType: string;
     createdAt: string;
     commissionCurrency: string;
+}
+export interface OrderMeta {
+    [key: string]: string;
 }
 export interface Order {
     uuid: string;
@@ -96,7 +99,7 @@ export interface Order {
     type: string;
     state: string;
     responseFull: string|null;
-    metaData: {[key: string]: string}|null;
+    metaData: OrderMeta|null;
     createdAt: string;
     updatedAt: string;
     exchanger: string;
@@ -110,14 +113,14 @@ export interface OrderSearchCriteria {
     state?: OrderState[];
     side?: OrderSide[];
     type?: OrderType[];
-    meta?: {[key: string]: string};
+    meta?: OrderMeta;
     periodFrom?: string;
     periodTo?: string;
     sort?: 'asc'|'desc';
     limit?: number;
 }
 export interface WalletBalance {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     balance: {
         [currency: string]: {
@@ -136,7 +139,7 @@ export interface CreatedOrderTrade {
     execType: TradeExecType;
 }
 export interface CreatedOrder {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     order: {
         id: number;
@@ -148,8 +151,21 @@ export interface CreatedOrder {
         trades: CreatedOrderTrade[];
     };
 }
+export interface OrderParams {
+    exchanger: ExchangerName;
+    market: string;
+    side: OrderSide;
+    amount: string;
+    limitPrice?: number;
+    timestamp?: number;
+    metaData?: OrderMeta;
+}
+export type MarketOrderParams = Omit<OrderParams, 'limitPrice'>;
+export interface LimitOrderParams extends Omit<OrderParams, 'limitPrice'> {
+    limitPrice: number;
+}
 export interface CanceledOrder {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     order: {
         uuid: string;
@@ -185,9 +201,12 @@ export interface Ticker<T> {
     hash: string;
 }
 export type ExchangerId = number;
+export type ExchangerName = string;
 export interface Exchanger {
     id: ExchangerId;
-    name: string;
+    name: ExchangerName;
+    isActive: boolean;
+    isTradable: boolean;
 }
 export type MarketId = number;
 export interface Market {
@@ -221,7 +240,7 @@ export interface OHLCV {
     trades: number;
 }
 export interface HistoricalOHLCV {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     ohlcv: OHLCV[];
 }
@@ -234,7 +253,7 @@ export interface HistoricalTrade {
     side: number;
 }
 export interface HistoricalTrades {
-    exchanger: string;
+    exchanger: ExchangerName;
     market: string;
     trades: HistoricalTrade[];
 }
@@ -242,7 +261,7 @@ export interface HistoricalTrades {
 export type GeneralKey = string;
 export interface Exchanger {
     id: number;
-    name: string;
+    name: ExchangerName;
 }
 export interface ExchangerKey {
     id: number;
@@ -264,5 +283,94 @@ export interface ExchangerKeyData {
     label: string;
 }
 export interface ExchangerKeyDataMap {
-    [exchanger: string]: ExchangerKeyData[];
+    [exchanger: ExchangerName]: ExchangerKeyData[];
+}
+
+export interface DeploymentConfig {
+    id: number;
+    name: string;
+    dockerImageUrl: string;
+    dockerContainerCommand: string;
+    dockerContainerEnv: JsonString;
+}
+export type Region = string;
+export interface DeploymentRegion {
+    [region: Region]: {
+        id: number;
+        name: ExchangerName;
+        latency: number;
+    }[];
+}
+export type DeploymentStateId = number;
+export enum DeploymentState {
+    CREATED = 1,
+    STARTING = 2,
+    ACTIVE = 3,
+    STOPPING = 4,
+    INACTIVE = 5,
+    DELETING = 6,
+    FAILED = 7,
+    DELETED = 8
+}
+export enum DeploymentStateEvent {
+    START = 'START',
+    STOP = 'STOP',
+    DELETE = 'DELETE'
+}
+export interface DeploymentMeta {
+    [key: string]: string;
+}
+export interface Deployment {
+    id: number;
+    configId: number;
+    name: string;
+    region: Region;
+    limitCpu: number;
+    limitRam: number;
+    limitHdd: number;
+    dockerImageUrl: string;
+    dockerContainerCommand: string;
+    dockerContainerEnv: string;
+    metaData: JsonString;
+    state: {
+        id: DeploymentStateId;
+        value: keyof typeof DeploymentState;
+    };
+    availableEvents: (keyof typeof DeploymentStateEvent)[];
+}
+export interface DeploymentListItem extends Omit<Deployment, 'metaData'> {
+    metaData: DeploymentMeta;
+    createdAt: string;
+    config: DeploymentConfig;
+}
+export type JsonString = string;
+export interface DeploymentConfigListItem extends Omit<DeploymentConfig, 'dockerContainerEnv'> {
+    dockerContainerEnv: string[];
+}
+export interface DeploymentSearchCriteria {
+    region?: Region;
+    state?: DeploymentStateId[];
+    meta?: DeploymentMeta;
+    periodFrom?: string;
+    periodTo?: string;
+    sort?: 'asc'|'desc';
+    limit?: number;
+}
+export interface DeploymentParams {
+    name: string;
+    region: Region;
+    limitCpu: number;
+    limitRam: number;
+    limitHdd: number;
+    configId?: number;
+    dockerImageUrl?: string;
+    dockerContainerCommand?: string;
+    dockerContainerEnv?: string[];
+    metaData?: DeploymentMeta;
+}
+export interface DeploymentConfigParams {
+    name: string;
+    dockerImageUrl: string;
+    dockerContainerCommand?: string;
+    dockerContainerEnv?: string[];
 }

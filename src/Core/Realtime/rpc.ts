@@ -1,12 +1,32 @@
 import {Method} from 'axios';
 import {
     CanceledOrder,
-    CreatedOrder, Exchanger, ExchangerKey, ExchangerKeyDataMap, ExchangerKeySecret,
-    ExchangerMarketMap, GeneralKey, GeneralKeyExchangers, HistoricalOHLCV, HistoricalTrades, Market,
+    CreatedOrder, Deployment, DeploymentConfig,
+    DeploymentConfigListItem, DeploymentConfigParams,
+    DeploymentListItem, DeploymentParams,
+    DeploymentRegion,
+    DeploymentSearchCriteria,
+    DeploymentState,
+    DeploymentStateEvent,
+    Exchanger,
+    ExchangerKey,
+    ExchangerKeyDataMap,
+    ExchangerKeySecret,
+    ExchangerMarketMap,
+    GeneralKey,
+    GeneralKeyExchangers,
+    HistoricalOHLCV,
+    HistoricalTrades,
+    LimitOrderParams,
+    Market,
+    MarketOrderParams,
     MyTrades,
-    OpenOrders, Order,
+    OpenOrders,
+    Order,
     OrderBookSnapshot,
-    OrderBookTicker, OrderSearchCriteria,
+    OrderBookTicker,
+    OrderParams,
+    OrderSearchCriteria,
     PriceTicker,
     PublicTradesSnapshot,
     Response,
@@ -242,12 +262,10 @@ export class Rpc implements IRpc {
         };
     }
 
-    public async createOrder(exchanger: string, market: string, side: string, amount: string, limitPrice?: string|null): Promise<Response<CreatedOrder>> {
-        if (!limitPrice) {
-            limitPrice = null;
-        }
+    public async createOrder(orderParams: OrderParams): Promise<Response<CreatedOrder>> {
+        const { exchanger, market, side, amount, limitPrice, metaData } = orderParams;
         const rpcResponse: Response<any> = await this.invokeRestApi(
-            'POST', 'order', { exchanger, market, side, amount, limitPrice }
+            'POST', 'order', { exchanger, market, side, amount, limitPrice: limitPrice || null, metaData }
         );
 
         if (rpcResponse.state === ResponseState.ERROR) {
@@ -260,7 +278,7 @@ export class Rpc implements IRpc {
         };
     }
 
-    public async searchOrders(orderSearchCriteria: OrderSearchCriteria): Promise<Response<Order[]>> {
+    public async searchOrders(orderSearchCriteria?: OrderSearchCriteria): Promise<Response<Order[]>> {
         const rpcResponse: Response<any> = await this.invokeRestApi(
             'POST', 'order/search', orderSearchCriteria
         );
@@ -275,12 +293,12 @@ export class Rpc implements IRpc {
         };
     }
 
-    public createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>> {
-        return this.createOrder(exchanger, market, side, amount, limitPrice);
+    public createLimitOrder(limitOrderParams: LimitOrderParams): Promise<Response<CreatedOrder>> {
+        return this.createOrder(limitOrderParams);
     }
 
-    public createMarketOrder(exchanger: string, market: string, side: string, amount: string): Promise<Response<CreatedOrder>> {
-        return this.createOrder(exchanger, market, side, amount);
+    public createMarketOrder(marketOrderParams: MarketOrderParams): Promise<Response<CreatedOrder>> {
+        return this.createOrder(marketOrderParams);
     }
 
     public async cancelOrder(exchanger: string, market: string, uuid: string): Promise<Response<CanceledOrder>> {
@@ -382,6 +400,165 @@ export class Rpc implements IRpc {
 
     public async deleteExchangerKey(id: number): Promise<Response<boolean>> {
         const rpcResponse: Response<any> = await this.invokeRestApi('DELETE', 'key/exchanger/:id', { id });
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async createDeployment(deploymentParams: DeploymentParams): Promise<Response<Deployment>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'POST', 'deployment', deploymentParams
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async createDeploymentConfig(deploymentConfigParams: DeploymentConfigParams): Promise<Response<DeploymentConfig>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'POST', 'deployment/config', deploymentConfigParams
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async deleteDeployment(id: number): Promise<Response<boolean>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('DELETE', 'deployment/:id', { id });
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async deleteDeploymentConfig(id: number): Promise<Response<boolean>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('DELETE', 'deployment/config/:id', { id });
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchDeployment(id: number): Promise<Response<DeploymentListItem>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'GET', 'deployment/:id', { id }
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchDeploymentConfig(id: number): Promise<Response<DeploymentConfigListItem>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'GET', 'deployment/config/:id', { id }
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchDeploymentConfigs(): Promise<Response<DeploymentConfigListItem[]>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'GET', 'deployment/configs'
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchDeploymentRegions(): Promise<Response<DeploymentRegion>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'GET', 'deployment/regions'
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchDeploymentStates(): Promise<Response<DeploymentState>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'GET', 'deployment/states'
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async fetchDeployments(deploymentSearchCriteria?: DeploymentSearchCriteria): Promise<Response<DeploymentListItem[]>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'POST', 'deployment/search', deploymentSearchCriteria
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
+    public async updateDeploymentState(id: number, event: DeploymentStateEvent): Promise<Response<boolean>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi('PUT', 'deployment/:id', { id, event });
 
         if (rpcResponse.state === ResponseState.ERROR) {
             return rpcResponse;

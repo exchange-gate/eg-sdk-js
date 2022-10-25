@@ -2,17 +2,28 @@ import {AxiosRequestConfig, AxiosRequestHeaders, Method} from 'axios';
 import RestClass from '@Core/rest';
 import {
     CanceledOrder,
-    CreatedOrder, Exchanger, ExchangerKey,
-    ExchangerKeyDataMap, ExchangerKeySecret,
+    CreatedOrder,
+    Deployment,
+    DeploymentConfig, DeploymentConfigListItem, DeploymentConfigParams,
+    DeploymentListItem, DeploymentParams,
+    DeploymentRegion, DeploymentSearchCriteria,
+    DeploymentState, DeploymentStateEvent,
+    Exchanger,
+    ExchangerKey,
+    ExchangerKeyDataMap,
+    ExchangerKeySecret,
     ExchangerMarketMap,
     GeneralKey,
     GeneralKeyExchangers,
     HistoricalOHLCV,
-    HistoricalTrades, Market,
+    HistoricalTrades, LimitOrderParams,
+    Market, MarketOrderParams,
     MyTrades,
-    OpenOrders, Order,
+    OpenOrders,
+    Order,
     OrderBookSnapshot,
-    OrderBookTicker, OrderSearchCriteria,
+    OrderBookTicker, OrderParams,
+    OrderSearchCriteria,
     PriceTicker,
     PublicTradesSnapshot,
     Response,
@@ -50,17 +61,31 @@ export interface Rest {
     fetchExchangerMarkets(): Promise<Response<ExchangerMarketMap>>;
     fetchMarkets(): Promise<Response<Market[]>>;
     fetchExchangers(): Promise<Response<Exchanger[]>>;
-    createOrder(exchanger: string, market: string, side: string, amount: string, limitPrice?: string|null): Promise<Response<CreatedOrder>>;
-    createMarketOrder(exchanger: string, market: string, side: string, amount: string): Promise<Response<CreatedOrder>>;
-    createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>>;
+    createOrder(orderParams: OrderParams): Promise<Response<CreatedOrder>>;
+    createMarketOrder(marketOrderParams: MarketOrderParams): Promise<Response<CreatedOrder>>;
+
+    createLimitOrder(limitOrderParams: LimitOrderParams): Promise<Response<CreatedOrder>>;
     cancelOrder(exchanger: string, market: string, uuid: string): Promise<Response<CanceledOrder>>;
-    searchOrders(orderSearchCriteria: OrderSearchCriteria): Promise<Response<Order[]>>;
+    searchOrders(orderSearchCriteria?: OrderSearchCriteria): Promise<Response<Order[]>>;
 
     createGeneralApiKey(name: string): Promise<Response<GeneralKey>>;
     fetchGeneralApiKey(keyId: number): Promise<Response<GeneralKeyExchangers>>;
+
     fetchExchangerKeyDataMap(): Promise<Response<ExchangerKeyDataMap>>;
     createExchangerKey(exchangerId: number, name: string, data: ExchangerKeySecret): Promise<Response<ExchangerKey>>;
     addGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>>;
     removeGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>>;
     deleteExchangerKey(exchangerKeyId: number): Promise<Response<boolean>>;
+
+    fetchDeploymentRegions(): Promise<Response<DeploymentRegion>>;
+    fetchDeploymentStates(): Promise<Response<DeploymentState>>;
+    createDeployment(deploymentParams: DeploymentParams): Promise<Response<Deployment>>;
+    fetchDeployment(deploymentId: number): Promise<Response<DeploymentListItem>>;
+    fetchDeployments(deploymentSearchCriteria?: DeploymentSearchCriteria): Promise<Response<DeploymentListItem[]>>;
+    createDeploymentConfig(deploymentConfigParams: DeploymentConfigParams): Promise<Response<DeploymentConfig>>;
+    fetchDeploymentConfig(deploymentConfig: number): Promise<Response<DeploymentConfigListItem>>;
+    fetchDeploymentConfigs(): Promise<Response<DeploymentConfigListItem[]>>;
+    updateDeploymentState(deploymentId: number, event: DeploymentStateEvent): Promise<Response<boolean>>;
+    deleteDeployment(deploymentId: number): Promise<Response<boolean>>;
+    deleteDeploymentConfig(deploymentConfigId: number): Promise<Response<boolean>>;
 }

@@ -4,12 +4,32 @@ import {defaultOpts} from '@Core/Rest/defaultOpts';
 import pkg from 'package.json';
 import {
     CanceledOrder,
-    CreatedOrder, Exchanger, ExchangerKey, ExchangerKeyDataMap, ExchangerKeySecret,
-    ExchangerMarketMap, GeneralKey, GeneralKeyExchangers, HistoricalOHLCV, HistoricalTrades, Market,
+    CreatedOrder,
+    Deployment,
+    DeploymentConfig,
+    DeploymentConfigListItem,
+    DeploymentConfigParams,
+    DeploymentListItem,
+    DeploymentParams,
+    DeploymentRegion,
+    DeploymentSearchCriteria,
+    DeploymentState, DeploymentStateEvent,
+    Exchanger,
+    ExchangerKey,
+    ExchangerKeyDataMap,
+    ExchangerKeySecret,
+    ExchangerMarketMap,
+    GeneralKey,
+    GeneralKeyExchangers,
+    HistoricalOHLCV,
+    HistoricalTrades, LimitOrderParams,
+    Market, MarketOrderParams,
     MyTrades,
-    OpenOrders, Order,
+    OpenOrders,
+    Order,
     OrderBookSnapshot,
-    OrderBookTicker, OrderSearchCriteria,
+    OrderBookTicker, OrderMeta, OrderParams,
+    OrderSearchCriteria,
     PriceTicker,
     PublicTradesSnapshot,
     Response,
@@ -73,20 +93,18 @@ export default class Rest implements IRest {
         };
     }
 
-    public createLimitOrder(exchanger: string, market: string, side: string, amount: string, limitPrice: string): Promise<Response<CreatedOrder>> {
-        return this.createOrder(exchanger, market, side, amount, limitPrice);
+    public createLimitOrder(limitOrderParams: LimitOrderParams): Promise<Response<CreatedOrder>> {
+        return this.createOrder(limitOrderParams);
     }
 
-    public createMarketOrder(exchanger: string, market: string, side: string, amount: string): Promise<Response<CreatedOrder>> {
-        return this.createOrder(exchanger, market, side, amount);
+    public createMarketOrder(marketOrderParams: MarketOrderParams): Promise<Response<CreatedOrder>> {
+        return this.createOrder(marketOrderParams);
     }
 
-    public async createOrder(exchanger: string, market: string, side: string, amount: string, limitPrice?: string | null): Promise<Response<CreatedOrder>> {
-        if (!limitPrice) {
-            limitPrice = null;
-        }
+    public async createOrder(orderParams: OrderParams): Promise<Response<CreatedOrder>> {
+        const { exchanger, market, side, amount, limitPrice, metaData } = orderParams;
         const restResponse: Response<any> = await this.invokeRestApi(
-            'POST', '/api/order', { exchanger, market, side, amount, limitPrice }
+            'POST', '/api/order', { exchanger, market, side, amount, limitPrice: limitPrice || null, metaData }
         );
 
         if (restResponse.state === ResponseState.ERROR) {
@@ -99,7 +117,7 @@ export default class Rest implements IRest {
         };
     }
 
-    public async searchOrders(orderSearchCriteria: OrderSearchCriteria): Promise<Response<Order[]>> {
+    public async searchOrders(orderSearchCriteria?: OrderSearchCriteria): Promise<Response<Order[]>> {
         const restResponse: Response<any> = await this.invokeRestApi(
             'POST', '/api/order/search', orderSearchCriteria
         );
@@ -318,10 +336,10 @@ export default class Rest implements IRest {
             return restResponse;
         }
 
-        return Promise.resolve({
+        return {
             state: ResponseState.SUCCESS,
             data: restResponse.data
-        });
+        };
     }
 
     public async fetchGeneralApiKey(keyId: number): Promise<Response<GeneralKeyExchangers>> {
@@ -331,10 +349,10 @@ export default class Rest implements IRest {
             return restResponse;
         }
 
-        return Promise.resolve({
+        return {
             state: ResponseState.SUCCESS,
             data: restResponse.data
-        });
+        };
     }
 
     public async fetchExchangerKeyDataMap(): Promise<Response<ExchangerKeyDataMap>> {
@@ -344,10 +362,10 @@ export default class Rest implements IRest {
             return restResponse;
         }
 
-        return Promise.resolve({
+        return {
             state: ResponseState.SUCCESS,
             data: restResponse.data
-        });
+        };
     }
 
     public async createExchangerKey(exchangerId: number, name: string, data: ExchangerKeySecret): Promise<Response<ExchangerKey>> {
@@ -357,10 +375,10 @@ export default class Rest implements IRest {
             return restResponse;
         }
 
-        return Promise.resolve({
+        return {
             state: ResponseState.SUCCESS,
             data: restResponse.data
-        });
+        };
     }
 
     public async addGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>> {
@@ -370,10 +388,10 @@ export default class Rest implements IRest {
             return restResponse;
         }
 
-        return Promise.resolve({
+        return {
             state: ResponseState.SUCCESS,
             data: restResponse.data
-        });
+        };
     }
 
     public async removeGeneralExchangerKeyLink(generalKeyId: number, exchangerKeyIds: number[]): Promise<Response<boolean>> {
@@ -383,10 +401,10 @@ export default class Rest implements IRest {
             return restResponse;
         }
 
-        return Promise.resolve({
+        return {
             state: ResponseState.SUCCESS,
             data: restResponse.data
-        });
+        };
     }
 
     public async deleteExchangerKey(exchangerKeyId: number): Promise<Response<boolean>> {
@@ -396,9 +414,152 @@ export default class Rest implements IRest {
             return restResponse;
         }
 
-        return Promise.resolve({
+        return {
             state: ResponseState.SUCCESS,
             data: restResponse.data
-        });
+        };
+    }
+
+    public async createDeploymentConfig(deploymentConfigParams: DeploymentConfigParams): Promise<Response<DeploymentConfig>> {
+        const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/deployment/config', deploymentConfigParams);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async createDeployment(deploymentParams: DeploymentParams): Promise<Response<Deployment>> {
+        const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/deployment', deploymentParams);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async deleteDeployment(deploymentId: number): Promise<Response<boolean>> {
+        const restResponse: Response<any> = await this.invokeRestApi('DELETE', `/api/deployment/${deploymentId}`);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async deleteDeploymentConfig(deploymentConfigId: number): Promise<Response<boolean>> {
+        const restResponse: Response<any> = await this.invokeRestApi('DELETE', `/api/deployment/config/${deploymentConfigId}`);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async fetchDeployment(deploymentId: number): Promise<Response<DeploymentListItem>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', `/api/deployment/${deploymentId}`);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async fetchDeploymentConfig(deploymentConfig: number): Promise<Response<DeploymentConfigListItem>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', `/api/deployment/config/${deploymentConfig}`);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async fetchDeploymentConfigs(): Promise<Response<DeploymentConfigListItem[]>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', '/api/deployment/configs');
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async fetchDeploymentRegions(): Promise<Response<DeploymentRegion>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', '/api/deployment/regions');
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async fetchDeploymentStates(): Promise<Response<DeploymentState>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', '/api/deployment/states');
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async fetchDeployments(deploymentSearchCriteria?: DeploymentSearchCriteria): Promise<Response<DeploymentListItem[]>> {
+        const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/deployment/search', deploymentSearchCriteria);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
+    public async updateDeploymentState(deploymentId: number, event: DeploymentStateEvent): Promise<Response<boolean>> {
+        const restResponse: Response<any> = await this.invokeRestApi('PUT', `/api/deployment/${deploymentId}`, { event });
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
     }
 }
