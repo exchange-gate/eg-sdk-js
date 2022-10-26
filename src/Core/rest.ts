@@ -485,6 +485,19 @@ export default class Rest implements IRest {
         };
     }
 
+    public async fetchDeploymentLogs(id: number, periodFrom: string, periodTo: string): Promise<Response<string[]>> {
+        const restResponse: Response<any> = await this.invokeRestApi('GET', `/api/deployment/${id}/logs/${periodFrom}/${periodTo}`);
+
+        if (restResponse.state === ResponseState.ERROR) {
+            return restResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: restResponse.data
+        };
+    }
+
     public async fetchDeploymentConfig(deploymentConfig: number): Promise<Response<DeploymentConfigListItem>> {
         const restResponse: Response<any> = await this.invokeRestApi('GET', `/api/deployment/config/${deploymentConfig}`);
 

@@ -482,6 +482,21 @@ export class Rpc implements IRpc {
         };
     }
 
+    public async fetchDeploymentLogs(id: number, periodFrom: string, periodTo: string): Promise<Response<string[]>> {
+        const rpcResponse: Response<any> = await this.invokeRestApi(
+            'GET', 'deployment/:id/logs/:periodFrom/:periodTo', { id, periodFrom, periodTo }
+        );
+
+        if (rpcResponse.state === ResponseState.ERROR) {
+            return rpcResponse;
+        }
+
+        return {
+            state: ResponseState.SUCCESS,
+            data: rpcResponse.data
+        };
+    }
+
     public async fetchDeploymentConfig(id: number): Promise<Response<DeploymentConfigListItem>> {
         const rpcResponse: Response<any> = await this.invokeRestApi(
             'GET', 'deployment/config/:id', { id }
