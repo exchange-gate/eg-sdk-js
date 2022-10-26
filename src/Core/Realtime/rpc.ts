@@ -360,7 +360,7 @@ export class Rpc implements IRpc {
     }
 
     public async createExchangerKey(exchangerId: number, name: string, data: ExchangerKeySecret): Promise<Response<ExchangerKey>> {
-        const rpcResponse: Response<any> = await this.invokeRestApi('POST', 'key/exchanger', { exchangerId, name, data });
+        const rpcResponse: Response<any> = await this.invokeRestApi('POST', 'key/exchanger', { exchangerId, name, data: JSON.stringify(data) });
 
         if (rpcResponse.state === ResponseState.ERROR) {
             return rpcResponse;

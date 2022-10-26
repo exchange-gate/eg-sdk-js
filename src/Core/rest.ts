@@ -28,7 +28,7 @@ import {
     OpenOrders,
     Order,
     OrderBookSnapshot,
-    OrderBookTicker, OrderMeta, OrderParams,
+    OrderBookTicker, OrderParams,
     OrderSearchCriteria,
     PriceTicker,
     PublicTradesSnapshot,
@@ -369,7 +369,7 @@ export default class Rest implements IRest {
     }
 
     public async createExchangerKey(exchangerId: number, name: string, data: ExchangerKeySecret): Promise<Response<ExchangerKey>> {
-        const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/key/exchanger', { exchangerId, name, data });
+        const restResponse: Response<any> = await this.invokeRestApi('POST', '/api/key/exchanger', { exchangerId, name, data: JSON.stringify(data) });
 
         if (restResponse.state === ResponseState.ERROR) {
             return restResponse;
