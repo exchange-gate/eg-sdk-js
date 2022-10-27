@@ -344,6 +344,10 @@ export interface DeploymentListItem extends Omit<Deployment, 'metaData'> {
     config: DeploymentConfig;
 }
 export type JsonString = string;
+export interface DeploymentLog {
+    time: string;
+    message: string;
+}
 export interface DeploymentConfigListItem extends Omit<DeploymentConfig, 'dockerContainerEnv'> {
     dockerContainerEnv: string[];
 }

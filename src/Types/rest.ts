@@ -5,7 +5,7 @@ import {
     CreatedOrder,
     Deployment,
     DeploymentConfig, DeploymentConfigListItem, DeploymentConfigParams,
-    DeploymentListItem, DeploymentParams,
+    DeploymentListItem, DeploymentLog, DeploymentParams,
     DeploymentRegion, DeploymentSearchCriteria,
     DeploymentState, DeploymentStateEvent,
     Exchanger,
@@ -81,7 +81,7 @@ export interface Rest {
     fetchDeploymentStates(): Promise<Response<DeploymentState>>;
     createDeployment(deploymentParams: DeploymentParams): Promise<Response<Deployment>>;
     fetchDeployment(deploymentId: number): Promise<Response<DeploymentListItem>>;
-    fetchDeploymentLogs(deploymentId: number, periodFrom: string, periodTo: string): Promise<Response<string[]>>;
+    fetchDeploymentLogs(deploymentId: number, periodFrom: string, periodTo: string): Promise<Response<DeploymentLog[]>>;
     fetchDeployments(deploymentSearchCriteria?: DeploymentSearchCriteria): Promise<Response<DeploymentListItem[]>>;
     createDeploymentConfig(deploymentConfigParams: DeploymentConfigParams): Promise<Response<DeploymentConfig>>;
     fetchDeploymentConfig(deploymentConfig: number): Promise<Response<DeploymentConfigListItem>>;

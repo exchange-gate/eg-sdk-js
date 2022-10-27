@@ -3,7 +3,7 @@ import {
     CanceledOrder,
     CreatedOrder, Deployment, DeploymentConfig,
     DeploymentConfigListItem, DeploymentConfigParams,
-    DeploymentListItem, DeploymentParams,
+    DeploymentListItem, DeploymentLog, DeploymentParams,
     DeploymentRegion,
     DeploymentSearchCriteria,
     DeploymentState,
@@ -482,7 +482,7 @@ export class Rpc implements IRpc {
         };
     }
 
-    public async fetchDeploymentLogs(id: number, periodFrom: string, periodTo: string): Promise<Response<string[]>> {
+    public async fetchDeploymentLogs(id: number, periodFrom: string, periodTo: string): Promise<Response<DeploymentLog[]>> {
         const rpcResponse: Response<any> = await this.invokeRestApi(
             'GET', 'deployment/:id/logs/:periodFrom/:periodTo', { id, periodFrom, periodTo }
         );

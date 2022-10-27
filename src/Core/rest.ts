@@ -9,7 +9,7 @@ import {
     DeploymentConfig,
     DeploymentConfigListItem,
     DeploymentConfigParams,
-    DeploymentListItem,
+    DeploymentListItem, DeploymentLog,
     DeploymentParams,
     DeploymentRegion,
     DeploymentSearchCriteria,
@@ -485,7 +485,7 @@ export default class Rest implements IRest {
         };
     }
 
-    public async fetchDeploymentLogs(id: number, periodFrom: string, periodTo: string): Promise<Response<string[]>> {
+    public async fetchDeploymentLogs(id: number, periodFrom: string, periodTo: string): Promise<Response<DeploymentLog[]>> {
         const restResponse: Response<any> = await this.invokeRestApi('GET', `/api/deployment/${id}/logs/${periodFrom}/${periodTo}`);
 
         if (restResponse.state === ResponseState.ERROR) {
