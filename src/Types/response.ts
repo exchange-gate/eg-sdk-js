@@ -266,7 +266,7 @@ export interface Exchanger {
 export interface ExchangerKey {
     id: number;
     name: string;
-    exchanger?: Exchanger[];
+    exchanger?: Exchanger;
 }
 export interface GeneralKeyExchangers {
     id: number;
