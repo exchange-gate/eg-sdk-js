@@ -1,13 +1,12 @@
 /* eslint-disable no-restricted-imports */
-/* eslint-disable import/no-relative-parent-imports */
-import { RequestParams } from '@Types/rest';
 import jwtDecode from 'jwt-decode';
 import axios, { Method } from 'axios';
+import pkg from 'package.json';
 import { ResponseState, TickerType } from '../Types/response';
-import pkg from '../../package.json';
+import { RequestParams } from '../Types/rest';
 
 // eslint-disable-next-line max-len
-const API_KEY = '';
+let API_KEY = '';
 const defaultOpts = {
     baseURL: 'https://staging-api.exchange-gate.io',
     timeout: 5 * 1000
@@ -27,7 +26,9 @@ const markets = [
     'btc-usdt',
     'btc-eth'
 ];
-const UniqueName = 'JESTTEST12312';
+const uniqueName = 'JESTTESTING';
+const exchangerKey = '';
+const exchangerSecret = '';
 let exchanger = '';
 let market = '';
 let uuid = '';
@@ -110,13 +111,6 @@ test('GET /api/order/open/${exchanger}/${marketFrom}/${marketTo}', async () => {
     expect(restResponse.state).toBe(ResponseState.SUCCESS);
 });
 
-// test('GET /api/wallet/balance/${exchanger}/${marketFrom}/${marketTo}', async () => {
-//     const [marketFrom, marketTo] = market.toLowerCase().split('-');
-//     const restResponse = await invokeRestApi('GET', `/api/wallet/balance/${exchanger}/${marketFrom}/${marketTo}`);
-//     expect(restResponse.state).toBe(ResponseState.SUCCESS);
-// });
-// TODO: not passing if exchanger not connected
-
 test('GET /api/market-data/ticker/${TickerType.PRICE}/${exchanger}', async () => {
     const restResponse = await invokeRestApi(
         'GET',
@@ -172,7 +166,7 @@ test('POST, /api/order/search', async () => {
 });
 
 test('POST, /api/key/general', async () => {
-    const restResponse = await invokeRestApi('POST', '/api/key/general', { name: UniqueName });
+    const restResponse = await invokeRestApi('POST', '/api/key/general', { name: uniqueName });
     generalKey = restResponse.data;
     expect(restResponse.state).toBe(ResponseState.SUCCESS);
 });
@@ -193,16 +187,23 @@ let exchangerKeyId = 0;
 
 test('POST, /api/key/exchanger', async () => {
     const data = {
-        key: 'test123',
-        secret: 'test123'
+        key: exchangerKey,
+        secret: exchangerSecret
     };
-    const restResponse = await invokeRestApi('POST', '/api/key/exchanger', { exchangerId: 3, name: UniqueName, data: JSON.stringify(data) });
+    const restResponse = await invokeRestApi('POST', '/api/key/exchanger', { exchangerId: 3, name: uniqueName, data: JSON.stringify(data) });
     exchangerKeyId = restResponse.data.id;
     expect(restResponse.state).toBe(ResponseState.SUCCESS);
 });
 
 test('PUT , /api/key/general/${generalKeyId}/exchanger-keys', async () => {
     const restResponse = await invokeRestApi('PUT', `/api/key/general/${generalKeyId}/exchanger-keys`, { exchangerKeyIds: [exchangerKeyId] });
+    API_KEY = generalKey;
+    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+});
+
+test('GET /api/wallet/balance/${exchanger}/${marketFrom}/${marketTo}', async () => {
+    const [marketFrom, marketTo] = market.toLowerCase().split('-');
+    const restResponse = await invokeRestApi('GET', `/api/wallet/balance/binance/${marketFrom}/${marketTo}`);
     expect(restResponse.state).toBe(ResponseState.SUCCESS);
 });
 
@@ -215,4 +216,3 @@ test('DELETE , /api/key/exchanger/${exchangerKeyId}', async () => {
     const restResponse = await invokeRestApi('DELETE', `/api/key/exchanger/${exchangerKeyId}`);
     expect(restResponse.state).toBe(ResponseState.SUCCESS);
 });
-

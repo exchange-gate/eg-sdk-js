@@ -1,9 +1,8 @@
-/* eslint-disable import/no-relative-parent-imports */
 /* eslint-disable no-restricted-imports */
+import pkg from 'package.json';
 import axios, { Method } from 'axios';
-import { RequestParams } from '@Types/rest';
+import { RequestParams } from '../Types/rest';
 import { ResponseState } from '../Types/response';
-import pkg from '../../package.json';
 
 // eslint-disable-next-line max-len
 const API_KEY = '';
@@ -76,7 +75,6 @@ test('GET /api/deployment/${deploymentId}', async () => {
 //     const periodFrom = '';
 //     const periodTo = '';
 //     const restResponse = await invokeRestApi('GET', `/api/deployment/${deploymentId}/logs/${periodFrom}/${periodTo}`);
-//     console.log('LOGS - ',restResponse.data);
 //     expect(restResponse.state).toBe(ResponseState.SUCCESS);
 // });
 // TODO: not passing because no logs?
@@ -137,5 +135,3 @@ test('DELETE /api/deployment/config/${deploymentConfigId}', async () => {
     const restResponse = await invokeRestApi('DELETE', `/api/deployment/config/${deploymentConfigId}`);
     expect(restResponse.state).toBe(ResponseState.SUCCESS);
 });
-
-
