@@ -1,218 +1,225 @@
 /* eslint-disable no-restricted-imports */
+import { ExchangeGate } from '@exchange-gate.io/eg-sdk-js';
+import {
+    LimitOrderParams,
+    MarketOrderParams,
+    OrderParams,
+    ResponseState,
+    TickerType
+} from '@exchange-gate.io/eg-sdk-js/types/src/Types/response';
 import jwtDecode from 'jwt-decode';
-import axios, { Method } from 'axios';
-import pkg from 'package.json';
-import { ResponseState, TickerType } from '../Types/response';
-import { RequestParams } from '../Types/rest';
+
 
 // eslint-disable-next-line max-len
 let API_KEY = '';
-const defaultOpts = {
-    baseURL: 'https://staging-api.exchange-gate.io',
-    timeout: 5 * 1000
+const config = {
+    timeout: 5 * 1000,
+    baseURL: 'https://staging-api.exchange-gate.io'
 };
-
-const transport = axios.create({
-    ...defaultOpts,
-    headers: {
-        'Content-Type': 'application/json',
-        'User-Agent': `exchange-gate.io client, ${pkg.name} [v${pkg.version}]`,
-        'X-API-KEY': API_KEY,
-        'Version': pkg.version
-    }
-});
+const egRest = new ExchangeGate.Rest(API_KEY, config);
 
 const markets = [
     'btc-usdt',
     'btc-eth'
 ];
-const uniqueName = 'JESTTESTING';
-const exchangerKey = '';
-const exchangerSecret = '';
+const uniqueName = 'JESTTESTING'; // must be unique
+const exchangerKey = ''; // must fill
+const exchangerSecret = ''; // must fill
+const periodFrom = '';
+const periodTo = '';
 let exchanger = '';
+let exchangerKeyId = 0;
 let market = '';
 let uuid = '';
 let generalKey = '';
 let generalKeyId = 0;
 
-const invokeRestApi = async (method: Method, url: string, params?: RequestParams) => {
-    try {
-        const response = await transport.request({ method, url, data: params || {} });
-        return {
-            state: ResponseState.SUCCESS,
-            data: response.data.data
-        };
-    } catch (e) {
-        return {
-            state: ResponseState.ERROR,
-            error: {
-                code: null, // TODO
-                message: JSON.stringify(e)
-            }
-        };
+test('fetchExchangers', async () => {
+    const exchangers = await egRest.fetchExchangers();
+    if (exchangers.data) {
+        exchanger = exchangers.data[0].name;
     }
-};
-
-test('GET /api/exchanger/available', async () => {
-    const restResponse = await invokeRestApi('GET', '/api/exchanger/available');
-    exchanger = restResponse.data[0].name;
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+    expect(exchangers.state).toBe(ResponseState.SUCCESS);
+    expect(exchangers.data?.length).toBeGreaterThanOrEqual(1);
 });
 
-test('GET /api/market/list', async () => {
-    const restResponse = await invokeRestApi('GET', '/api/market/list');
-    market = restResponse.data[0].market;
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchMarkets', async () => {
+    const markets = await egRest.fetchMarkets();
+    if (markets.data) {
+        market = markets.data[0].market;
+    }
+    expect(markets.state).toBe(ResponseState.SUCCESS);
+    expect(markets.data?.length).toBeGreaterThanOrEqual(1);
 });
 
-test('GET /api/exchanger/markets', async () => {
-    const restResponse = await invokeRestApi('GET', '/api/exchanger/markets');
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchExchangerMarkets', async () => {
+    const markets = await egRest.fetchExchangerMarkets();
+    expect(markets.state).toBe(ResponseState.SUCCESS);
+    expect(markets.data).not.toBeUndefined();
 });
 
-test('GET /api/market-data/book/${exchanger}/${marketFrom}/${marketTo}', async () => {
-    const [marketFrom, marketTo] = market.toLowerCase().split('-');
-    const restResponse = await invokeRestApi('GET', `/api/market-data/book/${exchanger}/${marketFrom}/${marketTo}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchOrderBookSnapshot', async () => {
+    const orderBook = await egRest.fetchOrderBookSnapshot(exchanger, market);
+    expect(orderBook.state).toBe(ResponseState.SUCCESS);
+    expect(orderBook.data).not.toBeUndefined();
 });
 
-test('GET /api/market-data/trades/${exchanger}/${marketFrom}/${marketTo}', async () => {
-    const [marketFrom, marketTo] = market.toLowerCase().split('-');
-    const restResponse = await invokeRestApi('GET', `/api/market-data/trades/${exchanger}/${marketFrom}/${marketTo}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchPublicTradesSnapshot', async () => {
+    const publicTrades = await egRest.fetchPublicTradesSnapshot(exchanger, market);
+    expect(publicTrades.state).toBe(ResponseState.SUCCESS);
+    expect(publicTrades.data).not.toBeUndefined();
 });
 
-test('GET /api/market-data/ohlcv/${exchanger}/${marketFrom}/${marketTo}/${group}/${periodFrom}/${periodTo}', async () => {
-    const [marketFrom, marketTo] = market.toLowerCase().split('-');
+test('fetchOhlcv', async () => {
     const group = '1MTH';
-    const periodFrom = '';
-    const periodTo = '';
-    const restResponse = await invokeRestApi('GET', `/api/market-data/ohlcv/${exchanger}/${marketFrom}/${marketTo}/${group}/${periodFrom}/${periodTo}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+    const publicTrades = await egRest.fetchOhlcv(exchanger, market, group, periodFrom, periodTo);
+    expect(publicTrades.state).toBe(ResponseState.SUCCESS);
+    expect(publicTrades.data).not.toBeUndefined();
 });
 
-test('GET `/api/market-data/trades/${exchanger}/${marketFrom}/${marketTo}/${periodFrom}/${periodTo}`}', async () => {
-    const [marketFrom, marketTo] = market.toLowerCase().split('-');
-    const periodFrom = '';
-    const periodTo = '';
-    const restResponse = await invokeRestApi('GET', `/api/market-data/trades/${exchanger}/${marketFrom}/${marketTo}/${periodFrom}/${periodTo}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchHistoricalTrades', async () => {
+    const historicalTrades = await egRest.fetchHistoricalTrades(exchanger, market, periodFrom, periodTo);
+    expect(historicalTrades.state).toBe(ResponseState.SUCCESS);
+    expect(historicalTrades.data).not.toBeUndefined();
 });
 
-test('GET /api/order/trades-history/${exchanger}/${marketFrom}/${marketTo}', async () => {
-    const [marketFrom, marketTo] = market.toLowerCase().split('-');
-    const restResponse = await invokeRestApi('GET', `/api/order/trades-history/${exchanger}/${marketFrom}/${marketTo}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchMyTrades', async () => {
+    const myTrades = await egRest.fetchMyTrades(exchanger, market);
+    expect(myTrades.state).toBe(ResponseState.SUCCESS);
+    expect(myTrades.data).not.toBeUndefined();
 });
 
-test('GET /api/order/open/${exchanger}/${marketFrom}/${marketTo}', async () => {
-    const [marketFrom, marketTo] = market.toLowerCase().split('-');
-    const restResponse = await invokeRestApi('GET', `/api/order/open/${exchanger}/${marketFrom}/${marketTo}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchOpenOrders', async () => {
+    const openOrders = await egRest.fetchOpenOrders(exchanger, market);
+    expect(openOrders.state).toBe(ResponseState.SUCCESS);
+    expect(openOrders.data).not.toBeUndefined();
 });
 
-test('GET /api/market-data/ticker/${TickerType.PRICE}/${exchanger}', async () => {
-    const restResponse = await invokeRestApi(
-        'GET',
-        `/api/market-data/ticker/${TickerType.PRICE}/${exchanger}`,
-        { markets }
-    );
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchTicker', async () => {
+    const ticker = await egRest.fetchTicker(exchanger, markets, TickerType.PRICE);
+    expect(ticker.state).toBe(ResponseState.SUCCESS);
+    expect(ticker.data).not.toBeUndefined();
 });
 
-test('GET /api/market-data/ticker/${TickerType.BOOK}/${exchanger}', async () => {
-    const restResponse = await invokeRestApi(
-        'GET',
-        `/api/market-data/ticker/${TickerType.BOOK}/${exchanger}`,
-        { markets }
-    );
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchPriceTicker', async () => {
+    const priceTicker = await egRest.fetchPriceTicker(exchanger, markets);
+    expect(priceTicker.state).toBe(ResponseState.SUCCESS);
+    expect(priceTicker.data).not.toBeUndefined();
 });
 
-test('POST LIMIT /api/order', async () => {
-    const exchanger = 'binance';
-    const market = 'btc-usdt';
-    const side = 2;
-    const amount = '0.04';
-    const limitPrice = '70';
-    const restResponse = await invokeRestApi(
-        'POST', '/api/order', { exchanger, market, side, amount, limitPrice }
-    );
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchOrderBookTicker', async () => {
+    const orderBookTicker = await egRest.fetchOrderBookTicker(exchanger, markets);
+    expect(orderBookTicker.state).toBe(ResponseState.SUCCESS);
+    expect(orderBookTicker.data).not.toBeUndefined();
 });
 
-test('POST MARKET /api/order', async () => {
-    const exchanger = 'binance';
-    const market = 'btc-usdt';
-    const side = 2;
-    const amount = '0.04';
-    const restResponse = await invokeRestApi(
-        'POST', '/api/order', { exchanger, market, side, amount }
-    );
-    uuid = restResponse.data.uuid;
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('createOrder', async () => {
+    const orderParams: OrderParams = {
+        exchanger: 'binance',
+        market: 'btc-usdt',
+        side: 2,
+        amount: '0.04',
+        limitPrice: 70
+    };
+    const order = await egRest.createOrder(orderParams);
+    expect(order.state).toBe(ResponseState.SUCCESS);
+    expect(order.data).not.toBeUndefined();
 });
 
-test('DELETE /api/order/cancel/${uuid}', async () => {
-    const restResponse = await invokeRestApi(
-        'DELETE', `/api/order/cancel/${uuid}`
-    );
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('createMarketOrder', async () => {
+    const marketOrderParams: MarketOrderParams = {
+        exchanger: 'binance',
+        market: 'btc-usdt',
+        side: 2,
+        amount: '0.04'
+    };
+    const marketOrder = await egRest.createMarketOrder(marketOrderParams);
+    expect(marketOrder.state).toBe(ResponseState.SUCCESS);
+    expect(marketOrder.data).not.toBeUndefined();
 });
 
-test('POST, /api/order/search', async () => {
-    const restResponse = await invokeRestApi('POST', '/api/order/search');
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('createLimitOrder', async () => {
+    const limitOrderParams: LimitOrderParams = {
+        exchanger: 'binance',
+        market: 'btc-usdt',
+        side: 2,
+        amount: '0.04',
+        limitPrice: 70
+    };
+    const limitOrder = await egRest.createLimitOrder(limitOrderParams);
+    if (limitOrder.data) {
+        uuid = limitOrder.data.order.uuid;
+    }
+    expect(limitOrder.state).toBe(ResponseState.SUCCESS);
+    expect(limitOrder.data).not.toBeUndefined();
 });
 
-test('POST, /api/key/general', async () => {
-    const restResponse = await invokeRestApi('POST', '/api/key/general', { name: uniqueName });
-    generalKey = restResponse.data;
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('cancelOrder', async () => {
+    const cancelOrder = await egRest.cancelOrder(exchanger, market, uuid);
+    expect(cancelOrder.state).toBe(ResponseState.SUCCESS);
+    expect(cancelOrder.data).not.toBeUndefined();
 });
 
-test('GET, /api/key/general/${keyId}', async () => {
+test('searchOrders', async () => {
+    const searchOrders = await egRest.searchOrders();
+    expect(searchOrders.state).toBe(ResponseState.SUCCESS);
+    expect(searchOrders.data?.length).toBeGreaterThanOrEqual(1);
+});
+
+test('createGeneralApiKey', async () => {
+    const generalApiKey = await egRest.createGeneralApiKey(uniqueName);
+    if (generalApiKey.data) {
+        generalKey = generalApiKey.data;
+        API_KEY = generalKey;
+    }
+    expect(generalApiKey.state).toBe(ResponseState.SUCCESS);
+    expect(typeof generalApiKey.data).toBe('string');
+});
+
+test('fetchGeneralApiKey', async () => {
     const decodedGeneralKey: any = jwtDecode(generalKey);
     generalKeyId = decodedGeneralKey.generalKeyId;
-    const restResponse = await invokeRestApi('GET', `/api/key/general/${decodedGeneralKey.generalKeyId}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+    const generalKeyData = await egRest.fetchGeneralApiKey(decodedGeneralKey.generalKeyId);
+    expect(generalKeyData.state).toBe(ResponseState.SUCCESS);
 });
 
-test('GET, /api/key/exchangers-data-map', async () => {
-    const restResponse = await invokeRestApi('GET', '/api/key/exchangers-data-map');
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchExchangerKeyDataMap', async () => {
+    const keyMap = await egRest.fetchExchangerKeyDataMap();
+    expect(keyMap.state).toBe(ResponseState.SUCCESS);
+    expect(keyMap.data).not.toBeUndefined();
 });
 
-let exchangerKeyId = 0;
-
-test('POST, /api/key/exchanger', async () => {
+test('createExchangerKey', async () => {
     const data = {
         key: exchangerKey,
         secret: exchangerSecret
     };
-    const restResponse = await invokeRestApi('POST', '/api/key/exchanger', { exchangerId: 3, name: uniqueName, data: JSON.stringify(data) });
-    exchangerKeyId = restResponse.data.id;
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+    const key = await egRest.createExchangerKey(3, uniqueName, data);
+    if (key.data) {
+        exchangerKeyId = key.data.id;
+    }
+    expect(key.state).toBe(ResponseState.SUCCESS);
+    expect(key.data).not.toBeUndefined();
 });
 
-test('PUT , /api/key/general/${generalKeyId}/exchanger-keys', async () => {
-    const restResponse = await invokeRestApi('PUT', `/api/key/general/${generalKeyId}/exchanger-keys`, { exchangerKeyIds: [exchangerKeyId] });
-    API_KEY = generalKey;
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('addGeneralExchangerKeyLink', async () => {
+    const exchangerKeyLink = await egRest.addGeneralExchangerKeyLink(generalKeyId, [exchangerKeyId]);
+    expect(exchangerKeyLink.data).toBe(true);
 });
 
-test('GET /api/wallet/balance/${exchanger}/${marketFrom}/${marketTo}', async () => {
-    const [marketFrom, marketTo] = market.toLowerCase().split('-');
-    const restResponse = await invokeRestApi('GET', `/api/wallet/balance/binance/${marketFrom}/${marketTo}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('fetchWalletBalance', async () => {
+    const egRest = new ExchangeGate.Rest(generalKey, config);
+    const walletBalance = await egRest.fetchWalletBalance('binance', market);
+    expect(walletBalance.state).toBe(ResponseState.SUCCESS);
+    expect(walletBalance.data).not.toBeUndefined();
 });
 
-test('DELETE , /api/key/general/${generalKeyId}/exchanger-keys', async () => {
-    const restResponse = await invokeRestApi('DELETE', `/api/key/general/${generalKeyId}/exchanger-keys`, { exchangerKeyIds: [exchangerKeyId] });
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('removeGeneralExchangerKeyLink', async () => {
+    const keyLink = await egRest.removeGeneralExchangerKeyLink(generalKeyId, [exchangerKeyId]);
+    expect(keyLink.data).toBe(true);
 });
 
-test('DELETE , /api/key/exchanger/${exchangerKeyId}', async () => {
-    const restResponse = await invokeRestApi('DELETE', `/api/key/exchanger/${exchangerKeyId}`);
-    expect(restResponse.state).toBe(ResponseState.SUCCESS);
+test('deleteExchangerKey', async () => {
+    const key = await egRest.deleteExchangerKey(exchangerKeyId);
+    expect(key.data).toBe(true);
 });

@@ -29,6 +29,7 @@
     "test": "jest"
   },
   "dependencies": {
+    "@exchange-gate.io/eg-sdk-js": "^1.6.2",
     "@types/consumable-stream": "^2.0.0",
     "@types/socketcluster-client": "^16.0.0",
     "@types/writable-consumable-stream": "^2.0.0",
