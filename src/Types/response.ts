@@ -207,6 +207,8 @@ export interface Exchanger {
     name: ExchangerName;
     isActive: boolean;
     isTradable: boolean;
+    url: string;
+    logo: string;
 }
 export type MarketId = number;
 export interface Market {
@@ -214,13 +216,36 @@ export interface Market {
     market: string;
     isActive: boolean;
 }
+export interface LimitMinMax {
+    min: number;
+    max: number;
+}
+export interface MarketFee {
+    taker: number;
+    maker: number;
+    percentage: boolean;
+    tierBased: boolean;
+    feeSide: string;
+}
+export interface MarketPrecision {
+    price: number;
+    amount: number;
+    cost: number;
+}
+export interface MarketLimits {
+    amount: LimitMinMax;
+    price: LimitMinMax;
+    cost: LimitMinMax;
+}
 export type ExchangerMarketId = number;
 export interface ExchangerMarket {
     id: ExchangerMarketId;
     market: string;
     isActive: boolean;
     isTradable: boolean;
-    orderLimits: any; // TODO
+    fee: MarketFee;
+    precision: MarketPrecision;
+    limits: MarketLimits;
 }
 export interface ExchangerMarketMap {
     [exchanger: string]: {
