@@ -3,13 +3,12 @@ import {
     Event,
     MyTrade,
     OpenOrder,
-    OrderBook,
     OrderBookTicker,
     PriceTicker,
     PublicTrade,
     SubscriptionDetails
 } from '@Types/event';
-import {TickerType} from '@Types/response';
+import {OrderBookData as IOrderBook, TickerType} from '@Types/response';
 
 
 export interface StreamSubscription<T> {
@@ -21,7 +20,7 @@ export interface StreamSubscription<T> {
 export interface Stream {
     close(channelName?: string): boolean;
     publicTrades(exchanger: string, market: string): StreamSubscription<Event<PublicTrade>>;
-    orderBook(exchanger: string, market: string, emitTimeout: number): StreamSubscription<Event<OrderBook>>;
+    orderBook(exchanger: string, market: string): StreamSubscription<Event<IOrderBook>>;
     myTrades(exchanger: string, market: string): StreamSubscription<Event<MyTrade>>;
     openOrders(exchanger: string, market: string): StreamSubscription<Event<OpenOrder>>;
     ticker(exchanger: string, markets: string[], type: TickerType): Promise<StreamSubscription<Event<PriceTicker|OrderBookTicker>>>;

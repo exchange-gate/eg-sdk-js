@@ -25,7 +25,7 @@ export type PublicTrade = IPublicTrade;
 export interface MyTrade extends IMyTrade {
     eventType: EventType;
 }
-export interface OrderBook {
+export interface OrderBookEvent {
     book: IOrderBook;
     sequenceProcessed: number;
 }

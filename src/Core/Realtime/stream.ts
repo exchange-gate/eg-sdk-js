@@ -8,15 +8,13 @@ import {
     EventType,
     MyTrade,
     OpenOrder,
-    OrderBook,
-    OrderBookSideData,
     OrderBookTicker,
     PriceTicker,
     PublicTrade,
     SubscriptionDetails
 } from '@Types/event';
 import {EventData} from '@Core/Realtime/eventData';
-import {TickerType} from '@Types/response';
+import {OrderBookData as IOrderBook, TickerType} from '@Types/response';
 import Socket = IRealtime.Socket;
 
 
@@ -113,183 +111,25 @@ export class Stream implements IStream {
         return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<PublicTrade>>;
     }
 
-    public orderBook(exchanger: string, market: string, emitTimeout: number = 500): StreamSubscription<Event<OrderBook>> {
+    public orderBook(exchanger: string, market: string): StreamSubscription<Event<IOrderBook>> {
         const channelName = `stream:book:${exchanger}:${market}`.toLowerCase();
         const consumableStreamName = `${Stream.NamePrefix}:${channelName}`;
 
         if (this.subscriptions.has(consumableStreamName)) {
-            return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<OrderBook>>;
+            return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<IOrderBook>>;
         }
-
-        const lastEmittedBook: any = {
-            timeoutId: null,
-            sequenceId: null
-        };
-        const channelDataStore: any = {
-            isSynced: false,
-            book: {
-                bids: null,
-                asks: null,
-                sequenceProcessed: 0
-            },
-            queue: []
-        };
-
-        const wait = (ms: number) => new Promise(resolve => {
-            setTimeout(() => {
-                resolve(null);
-            }, ms);
-        });
-        const emitBook = () => {
-            if (
-                lastEmittedBook.timeoutId ||
-                lastEmittedBook.sequenceId === channelDataStore.book.sequenceProcessed
-            ) {
-                return false;
-            }
-
-            lastEmittedBook.timeoutId = setTimeout(() => {
-                clearTimeout(lastEmittedBook.timeoutId);
-                lastEmittedBook.timeoutId = null;
-                lastEmittedBook.sequenceId = channelDataStore.book.sequenceProcessed;
-
-                this.emitter.emit(
-                    consumableStreamName,
-                    EventData.FromOrderBookEvent({
-                        bids: sortPriceList('bids', [...channelDataStore.book.bids]),
-                        asks: sortPriceList('asks', [...channelDataStore.book.asks])
-                    }, channelDataStore.book.sequenceProcessed)
-                );
-            }, emitTimeout);
-            return true;
-        };
-        const updateBook = (e: any) => {
-            if (e.sequence !== (channelDataStore.book.sequenceProcessed + 1)) {
-                throw new Error('OrderBook build sequence out of order');
-            }
-
-            for (const side of ['asks', 'bids']) {
-                if (e.book[side]) {
-                    for (const action of ['add', 'remove']) {
-                        if (e.book[side][action]) {
-                            for (const i of e.book[side][action]) {
-                                if (action === 'add') {
-                                    const [price, amount] = i;
-                                    channelDataStore.book[side].set(price, amount);
-                                } else {
-                                    channelDataStore.book[side].delete(i);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-            channelDataStore.book.sequenceProcessed = e.sequence;
-        };
-        const buildBook = (event: any) => {
-            if (event.sequenceProcessed) {
-                channelDataStore.book.bids = new Map(event.book.bids);
-                channelDataStore.book.asks = new Map(event.book.asks);
-                channelDataStore.book.sequenceProcessed = event.sequenceProcessed;
-
-                if (channelDataStore.queue.length) {
-                    for (const queueItem of channelDataStore.queue) {
-                        if (queueItem.sequence <= channelDataStore.book.sequenceProcessed) {
-                            continue;
-                        }
-                        updateBook(queueItem);
-                    }
-                }
-                return channelDataStore.book;
-            }
-
-            if (channelDataStore.queue.length) {
-                throw new Error('Order book queue, unexpectedly, has new items');
-            }
-
-            updateBook(event);
-
-            return channelDataStore.book;
-        };
-        const fetchSnapshot = async (requiredSequence: number, exchanger: string, market: string) => {
-            // let rpcResponse: Response<OrderBookSnapshot>;
-            let snapshotSequence = 0;
-
-            while (requiredSequence > snapshotSequence) {
-                await wait(1000);
-                const rpcResponse = await this.rpc.fetchOrderBookSnapshot(exchanger, market);
-                if (!rpcResponse.data) {
-                    throw new Error(`RPC failed: orderBook ${exchanger}/${market}`);
-                }
-                snapshotSequence = rpcResponse.data.sequenceProcessed;
-
-                if (requiredSequence <= snapshotSequence) {
-                    return {
-                        book: rpcResponse.data.book,
-                        sequenceProcessed: rpcResponse.data.sequenceProcessed
-                    };
-                }
-            }
-            return false;
-            // return {
-            //     book: rpcResponse.data.book,
-            //     sequenceProcessed: rpcResponse.data.sequenceProcessed
-            // };
-        };
-        const sync = async (sequence: number) => {
-            if (
-                channelDataStore.isSynced ||
-                channelDataStore.queue.length !== 0 ||
-                channelDataStore.book.sequenceProcessed !== 0
-            ) {
-                throw new Error('Sync failed, invalid criteria');
-            }
-
-            const snapshot = await fetchSnapshot(sequence, exchanger, market);
-            buildBook(snapshot);
-            emitBook();
-
-            channelDataStore.isSynced = true;
-            channelDataStore.queue.length = 0;
-        };
-        const resetSync = () => {
-            channelDataStore.isSynced = false;
-            channelDataStore.book.sequenceProcessed = 0;
-            channelDataStore.queue.length = 0;
-        };
-        const sortPriceList = (side: string, priceList: OrderBookSideData[]): OrderBookSideData[] => priceList.sort((a: any, b: any) => {
-            if (side === 'bids') {
-                return +a[0] >= +b[0] ? -1 : 1;
-            } else {
-                return +a[0] <= +b[0] ? -1 : 1;
-            }
-        });
 
         (async () => {
             const bookChannel = this.socket.subscribe(channelName);
             for await (const bookEvent of bookChannel) {
-                if (channelDataStore.isSynced) {
-                    try {
-                        buildBook(bookEvent);
-                        emitBook();
-                    } catch (e) {
-                        resetSync();
-                    }
-                } else {
-                    if (!channelDataStore.queue.length) {
-                        sync(bookEvent.sequence).catch(e => {
-                            resetSync();
-                        });
-                    }
-                    channelDataStore.queue.push(bookEvent);
-                }
+                this.emitter.emit(consumableStreamName, EventData.FromOrderBook(bookEvent.book));
             }
         })();
 
         const listener = this.emitter.listener(consumableStreamName);
         this.subscriptions.set(consumableStreamName, this.makeStreamSubscription(channelName, listener));
 
-        return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<OrderBook>>;
+        return this.subscriptions.get(consumableStreamName) as StreamSubscription<Event<IOrderBook>>;
     }
 
     public myTrades(exchanger: string, market: string): StreamSubscription<Event<MyTrade>> {

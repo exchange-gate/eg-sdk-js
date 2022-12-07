@@ -3,11 +3,10 @@ import {
     Event,
     MyTrade,
     OpenOrder,
-    OrderBook,
     PublicTrade,
     SubscriptionDetails,
     EventType,
-    PriceTicker, OrderBookTicker
+    PriceTicker, OrderBookTicker, OrderBookEvent
 } from '@Types/event';
 import {OrderBookData as IOrderBook} from '@Types/response';
 
@@ -27,13 +26,19 @@ export class EventData {
             }
         };
     }
-    public static FromOrderBookEvent(book: IOrderBook, sequenceProcessed: number): Event<OrderBook> {
+    public static FromOrderBookEvent(book: IOrderBook, sequenceProcessed: number): Event<OrderBookEvent> {
         return {
             name: 'orderBook',
             data: {
                 book,
                 sequenceProcessed
             }
+        };
+    }
+    public static FromOrderBook(book: IOrderBook): Event<IOrderBook> {
+        return {
+            name: 'orderBook',
+            data: book
         };
     }
     public static FromMyTradeEvent(trade: any): Event<MyTrade> {

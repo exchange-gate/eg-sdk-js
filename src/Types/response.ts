@@ -15,12 +15,15 @@ export interface Response<T> {
     };
 }
 
-export type BidPrice = string;
-export type BidAmount = string;
+export type BidPrice = number;
+export type BidAmount = number;
 export type OrderBookSideData = [BidPrice, BidAmount];
 export interface OrderBookData {
     bids: OrderBookSideData[];
     asks: OrderBookSideData[];
+    timeReceived: number;
+    timeConsumed: number;
+    time: number;
 }
 export interface OrderBookSnapshot {
     exchanger: ExchangerName;
@@ -33,8 +36,8 @@ export interface PublicTrade {
     time: number;
     timeConsumed: number;
     timeReceived: number;
-    price: string;
-    amount: string;
+    price: number;
+    amount: number;
     side: OrderSide;
 }
 export interface PublicTradesSnapshot {
